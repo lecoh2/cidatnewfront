@@ -6,6 +6,7 @@ import { ProcessoResumoResponse } from "../models/processo-resumo/processo-resum
 import { AtendimentoAgrupadoResponse } from "../models/atendimento/atendimento-agrupodo-response";
 import { ProcessoAgrupadoResponse } from "../models/processo/proceso-agrupado-response";
 import { CasoAgrupadoResponse } from "../models/caso/caso-agrupado-response";
+import { LembreteResponse } from "../models/lembrete/lembrete-response";
 
 @Injectable({
     providedIn: 'root'
@@ -84,4 +85,10 @@ getUltimosCasos(qtd: number = 5): Observable<any[]> {
      getGraficoCaso(): Observable<CasoAgrupadoResponse[]> {
     return this.http.get<CasoAgrupadoResponse[]>(`${this.url}/api/v1/caso/consultar-graficos-casos`);
   }
+
+getLembretes(qtd: number = 5): Observable<LembreteResponse[]> {
+  return this.http.get<LembreteResponse[]>(
+    `${this.url}/api/v1/lembrete/lembretes?quantidade=${qtd}`
+  );
+}
 }

@@ -6,6 +6,7 @@ import { DashboardService } from '../../../../core/services/dashboard.service';
 import { ProcessoResumoResponse } from '../../../../core/models/processo-resumo/processo-resumo-response';
 import { ObterTarefaResponse } from '../../../../core/models/tarefa/obter-tarefa-response';
 
+
 @Component({
   selector: 'app-painel-principal',
   standalone: false,
@@ -40,6 +41,7 @@ export class PainelPrincipal implements OnInit {
     this.carregarProcessos();
     this.carregarTarefas();
     this.carregarTotais();
+   
   }
 
   private carregarUsuario(): void {
