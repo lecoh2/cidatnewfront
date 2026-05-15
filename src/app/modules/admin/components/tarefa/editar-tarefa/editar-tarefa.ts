@@ -1,0 +1,566 @@
+declare var bootstrap: any;
+import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { TarefaService } from '../../../../../core/services/tarefa.service';
+import { EtiquetaService } from '../../../../../core/services/etiqueta.service';
+import { UsuarioService } from '../../../../../core/services/usuario.service';
+import { AuthHelper } from '../../../../../core/helpers/auth.helper';
+import { StatusGeralKanbanEnum } from '../../../../../core/models/enums/status-kaban/status-kaban-geralEnum';
+import { PrioridadeTarefaEnum } from '../../../../../core/models/enums/prioridade/prioridade-tarefaEnum';
+import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
+import { ConsultarUsuarioResponse } from '../../../../../core/models/usuario/consultar-usuarios.response';
+import { CriarListaTarefaRequest } from '../../../../../core/models/tarefa/criar-lista-tarefa-request';
+import { EditarTarefaRequest } from '../../../../../core/models/tarefa/editar-tarefa-request';
+import { ListaTarefasResponse } from '../../../../../core/models/tarefa/lista-tarefas-response';
+import { TipoVinculoEnum } from '../../../../../core/models/enums/tipo-vinculo/tipo-vinculoEnum';
+import { ProcessoService } from '../../../../../core/services/processo.service';
+import { CasoService } from '../../../../../core/services/caso.service';
+import { AtendimentoService } from '../../../../../core/services/atendimento.service';
+import { finalize } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
+import { HistoricoService } from '../../../../../core/services/historico.service';
+import { TipoEntidadeEnum } from '../../../../../core/models/enums/tipo-entidade/tipo-entidadeEnum';
+@Component({
+  selector: 'app-editar-tarefa',
+  standalone: false,
+  templateUrl: './editar-tarefa.html',
+  styleUrl: './editar-tarefa.css'
+})
+export class EditarTarefa implements OnInit {
+  @ViewChild('modalHistorico')
+  modalHistorico!: ElementRef;
+  private fb = inject(FormBuilder);
+  private tarefaService = inject(TarefaService);
+  private etiquetaService = inject(EtiquetaService);
+  private usuarioService = inject(UsuarioService);
+  private authHelper = inject(AuthHelper);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private processoService = inject(ProcessoService);
+  private casoService = inject(CasoService);
+  private atendimentoService = inject(AtendimentoService);
+  private cdr = inject(ChangeDetectorRef);
+  private historicoService = inject(HistoricoService);
+  id!: string;
+  tipoVinculoEnum = TipoVinculoEnum;
+  vinculoSelecionado: any = null;
+  mensagemErro: string[] = [];
+  mensagemSucesso: string[] = [];
+  carregando = false;
+  historico: any[] = [];
+  carregandoHistorico = false;
+  listaFiltradas: ListaTarefasResponse[] = [];
+  statusEnum = StatusGeralKanbanEnum;
+  prioridadeEnum = PrioridadeTarefaEnum;
+
+  grupoTarefasEtiquetas: ConsultarEtiquetaResponse[] = [];
+  etiquetasSelecionadas: ConsultarEtiquetaResponse[] = [];
+  resultadosVinculo: any[] = [];
+  responsaveis: ConsultarUsuarioResponse[] = [];
+  responsaveisSelecionados: ConsultarUsuarioResponse[] = [];
+  responsaveisFiltrados: ConsultarUsuarioResponse[] = [];
+  listasTarefa: CriarListaTarefaRequest[] = [];
+
+  form = this.fb.group({
+    descricao: ['', Validators.required],
+    dataTarefa: [''],
+    prioridade: [PrioridadeTarefaEnum.Media],
+    statusGeralKanban: [StatusGeralKanbanEnum.A_Fazer],
+
+    processoId: this.fb.control<string | null>(null),
+    casoId: this.fb.control<string | null>(null),
+    atendimentoId: this.fb.control<string | null>(null),
+
+    tipoVinculo: this.fb.control<any>(null)
+  });
+  removerBackdrop() {
+    // remove classe do body
+    document.body.classList.remove('modal-open');
+
+    // remove estilos que travam a tela
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+
+    // remove todos os backdrops
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(b => b.remove());
+
+    // remove qualquer modal aberto
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(m => m.classList.remove('show'));
+  }
+  ngOnInit(): void {
+
+    this.id = this.route.snapshot.paramMap.get('id')!;
+
+    this.removerBackdrop();
+
+    console.log('ID:', this.id);
+
+    this.carregarBase();
+
+    this.carregarTarefa();
+
+    // 🔥 limpa ao trocar tipo
+    this.form.get('tipoVinculo')?.valueChanges.subscribe(() => {
+
+      this.limparVinculos();
+
+    });
+  }
+  buscarListaTarefas(termo: string) {
+
+    if (!termo) {
+      this.listaFiltradas = [];
+      return;
+    }
+
+    const termoLower = termo.toLowerCase();
+
+    this.listaFiltradas = this.listasTarefa
+      .filter(x => x.descricao?.toLowerCase().includes(termoLower))
+      .map(x => ({
+        descricao: x.descricao,
+        quantidade: 0 // 👈 obrigatório no response
+      }));
+  }
+  // =========================
+  // BASE
+  // =========================
+  carregarBase() {
+    this.etiquetaService.consultar().subscribe(res => this.grupoTarefasEtiquetas = res);
+
+    this.usuarioService.consultarUsuarioResponsavel().subscribe(res => {
+      this.responsaveis = res;
+    });
+  }
+  buscarResponsaveis(termo: string) {
+    if (!termo) {
+      this.responsaveisFiltrados = this.responsaveis;
+      return;
+    }
+
+    const termoLower = termo.toLowerCase();
+
+    this.responsaveisFiltrados = this.responsaveis.filter(x =>
+      x.nomeUsuario?.toLowerCase().includes(termoLower)
+    );
+  }
+  buscarVinculo(termo: string) {
+
+    const tipo = this.form.get('tipoVinculo')?.value;
+
+    if (!tipo || !termo) {
+      this.resultadosVinculo = [];
+      return;
+    }
+
+    let request$: Observable<any[]>;
+
+    if (tipo === TipoVinculoEnum.Processo || tipo === 'processo') {
+      request$ = this.processoService.consultarProcessoAutoComplete(termo);
+    }
+    else if (tipo === TipoVinculoEnum.Caso || tipo === 'caso') {
+      request$ = this.casoService.consultarCasoAutoComplete(termo);
+    }
+    else {
+      request$ = this.atendimentoService.consultarAtendimentoAutoComplete(termo);
+    }
+
+    request$.subscribe(res => {
+      this.resultadosVinculo = res;
+    });
+  }
+  selecionarVinculo(item: any) {
+
+    const tipo = this.form.get('tipoVinculo')?.value;
+
+    // 🔥 limpa tudo antes
+    this.limparVinculos();
+
+    this.resultadosVinculo = [];
+
+    this.vinculoSelecionado = item;
+
+    if (tipo === TipoVinculoEnum.Processo || tipo === 'processo') {
+
+      this.form.patchValue({
+        processoId: item.id
+      });
+    }
+    else if (tipo === TipoVinculoEnum.Caso || tipo === 'caso') {
+
+      this.form.patchValue({
+        casoId: item.id
+      });
+    }
+    else if (tipo === TipoVinculoEnum.Atendimento || tipo === 'atendimento') {
+
+      this.form.patchValue({
+        atendimentoId: item.id
+      });
+    }
+
+    console.log('FORM FINAL:', this.form.value);
+  }
+  // =========================
+  // CARREGA TAREFA
+  // =========================
+  carregarTarefa() {
+    this.carregando = true;
+
+    this.tarefaService.ObterTarefaPorId(this.id).subscribe({
+      next: res => {
+
+        console.log('CASO PASTA:', res.casoPasta);
+        console.log('PROCESSO PASTA:', res.processoPasta);
+        console.log('ATENDIMENTO:', res.atendimentoAssunto);
+
+        // 🔗 TIPO DE VÍNCULO
+        let tipoVinculo: TipoVinculoEnum | null = null;
+
+        if (res.processoId) tipoVinculo = TipoVinculoEnum.Processo;
+        else if (res.casoId) tipoVinculo = TipoVinculoEnum.Caso;
+        else if (res.atendimentoId) tipoVinculo = TipoVinculoEnum.Atendimento;
+
+        // 🧾 FORM
+        this.form.patchValue({
+          descricao: res.descricao,
+          dataTarefa: res.dataTarefa ? res.dataTarefa.split('T')[0] : null,
+          prioridade: res.prioridade,
+          statusGeralKanban: res.statusGeralKanban,
+
+          processoId: res.processoId,
+          casoId: res.casoId,
+          atendimentoId: res.atendimentoId,
+
+          tipoVinculo: tipoVinculo
+
+        }, { emitEvent: false });
+
+        // 📋 LISTA
+        this.listasTarefa = res.listasTarefa?.map(x => ({
+          descricao: x.descricao
+        })) ?? [];
+
+        // 👥 RESPONSÁVEIS
+        this.responsaveisSelecionados =
+          res.grupoTarefaResponsaveis?.map((x: any) => ({
+            id: x.id,
+            idPessoa: x.idPessoa ?? '',
+            nomeUsuario: x.nomeUsuario
+          })) ?? [];
+
+        // 🏷️ ETIQUETAS
+        this.etiquetasSelecionadas =
+          res.grupoTarefasEtiquetas?.map((x: any) => ({
+            id: x.id,
+            nome: x.nome,
+            cor: x.cor
+          })) ?? [];
+
+        // 🔗 VÍNCULO (SIMPLIFICADO E FUNCIONAL)
+        if (res.processoId) {
+          this.vinculoSelecionado = {
+            id: res.processoId,
+            tipo: 'processo',
+            pasta: res.processoPasta
+          };
+        }
+        else if (res.casoId) {
+          this.vinculoSelecionado = {
+            id: res.casoId,
+            tipo: 'caso',
+            pasta: res.casoPasta
+          };
+        }
+        else if (res.atendimentoId) {
+          this.vinculoSelecionado = {
+            id: res.atendimentoId,
+            tipo: 'atendimento',
+            pasta: res.atendimentoAssunto
+          };
+        }
+        else {
+          this.vinculoSelecionado = null;
+        }
+
+        this.carregando = false;
+      },
+      error: () => {
+        this.mensagemErro = ['Erro ao carregar tarefa'];
+        this.carregando = false;
+      }
+    });
+  }
+
+  // =========================
+  // LISTA
+  // =========================
+  adicionarItemLista() {
+    this.listasTarefa.push({ descricao: '' });
+  }
+
+  removerItemLista(i: number) {
+    this.listasTarefa.splice(i, 1);
+  }
+
+  atualizarDescricaoLista(i: number, valor: string) {
+    this.listasTarefa[i].descricao = valor;
+  }
+
+  // =========================
+  // SUBMIT UPDATE
+  // =========================
+  onSubmit() {
+
+    this.mensagemErro = [];
+    this.mensagemSucesso = [];
+
+    if (this.form.invalid) return;
+    console.log('TIPO VINCULO:', this.form.get('tipoVinculo')?.value); // 👈 AQUI
+    this.carregando = true;
+
+    const f = this.form.value;
+    const quantidadeVinculos = [
+      f.processoId,
+      f.casoId,
+      f.atendimentoId
+    ].filter(Boolean).length;
+
+    if (quantidadeVinculos > 1) {
+
+      this.mensagemErro = [
+        'A tarefa não pode possuir mais de um vínculo.'
+      ];
+
+      this.carregando = false;
+
+      return;
+    }
+    const request: EditarTarefaRequest = {
+
+      // =========================
+      // BÁSICOS
+      // =========================
+      descricao: f.descricao ?? '',
+      dataTarefa: f.dataTarefa ? new Date(f.dataTarefa) : null,
+      prioridade: f.prioridade!,
+      statusGeralKanban: f.statusGeralKanban!,
+
+      // =========================
+      // VÍNCULO (GARANTIDO LIMPO)
+      // =========================
+      processoId: f.processoId ?? null,
+      casoId: f.casoId ?? null,
+      atendimentoId: f.atendimentoId ?? null,
+
+      // =========================
+      // ETIQUETAS
+      // =========================
+      grupoTarefasEtiquetas: this.etiquetasSelecionadas.map(e => ({
+        etiquetaId: e.id!
+      })),
+
+      // =========================
+      // RESPONSÁVEIS
+      // =========================
+      grupoTarefaResponsaveis: this.responsaveisSelecionados.map(r => ({
+        usuarioId: r.id!
+      })),
+
+      // =========================
+      // CHECKLIST
+      // =========================
+      listasTarefa: this.listasTarefa
+        .filter(x => x.descricao?.trim())
+        .map(x => ({
+          descricao: x.descricao.trim(),
+          concluida: x.concluida ?? false,
+          dataConclusao: x.concluida ? new Date() : null
+        }))
+    };
+
+    this.tarefaService.editarTarefa(this.id, request)
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          this.mensagemSucesso = [
+            res.message ?? 'Tarefa atualizada com sucesso'
+          ];
+          setTimeout(() => {
+            this.router.navigate(['/admin/gestao-atividades']);
+          }, 3000);
+
+        },
+        error: err => {
+          this.tratarErro(err);
+        }
+      });
+  }
+  // =========================
+  // ERRO
+  // =========================
+  tratarErro(err: HttpErrorResponse) {
+    this.mensagemErro = ['Erro ao atualizar tarefa'];
+    this.carregando = false;
+  }
+  irParaLista() {
+    this.router.navigate(['/admin/gestao-atividades']);
+  }
+  private limparVinculos(): void {
+
+    this.form.patchValue({
+      processoId: null,
+      casoId: null,
+      atendimentoId: null
+    });
+
+    this.vinculoSelecionado = null;
+
+    this.resultadosVinculo = [];
+  }
+  abrirHistoricoProcesso(processoId: string) {
+
+    this.carregandoHistorico = true;
+
+    this.historico = [];
+
+    const modal =
+      new bootstrap.Modal(
+        this.modalHistorico.nativeElement
+      );
+
+    modal.show();
+
+    this.historicoService
+      .ConsultarHistorico(
+        TipoEntidadeEnum.Tarefa,
+        processoId
+      )
+      .subscribe({
+
+        next: (res) => {
+
+          this.historico = (res ?? []).map(h => ({
+            ...h,
+            antes: h.dadosAntes
+              ? JSON.parse(h.dadosAntes)
+              : null,
+
+            depois: h.dadosDepois
+              ? JSON.parse(h.dadosDepois)
+              : null
+          }));
+
+          this.carregandoHistorico = false;
+
+          this.cdr.detectChanges();
+        },
+
+        error: (err) => {
+
+          console.error(err);
+
+          this.carregandoHistorico = false;
+        }
+
+      });
+  }
+    // =========================
+  // FORMATAR VALOR
+  // =========================
+
+ formatarCampo(campo: string): string {
+    const map: any = {
+      Titulo: 'Título',
+      DataInicial: 'Data Inicial',
+      DataFinal: 'Data Final',
+      HoraInicial: 'Hora Inicial',
+      HoraFinal: 'Hora Final',
+      DiaInteiro: 'Dia Inteiro',
+      Endereco: 'Endereço',
+      Observacao: 'Observação',
+      Modalidade: 'Modalidade',
+      StatusGeralKanban: 'Status',
+      Responsaveis: 'Responsáveis'
+    };
+
+    return map[campo] || campo;
+  }
+
+  formatarValor(valor: any, campo: string): string {
+
+    if (valor === null || valor === undefined) return '-';
+
+    // ARRAY (Responsáveis)
+    if (Array.isArray(valor)) {
+      return valor.join(', ');
+    }
+
+    // BOOLEAN
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sim' : 'Não';
+    }
+
+    // STATUS
+    if (campo === 'StatusGeralKanban') {
+      return this.getStatusLabel(valor);
+    }
+    // 🔥 MODALIDADE (AQUI)
+    if (campo === 'Modalidade') {
+      return this.getModalidadeLabel(valor);
+    }
+    // DATA
+    if (campo.toLowerCase().includes('data')) {
+      return new Date(valor).toLocaleDateString('pt-BR');
+    }
+
+    // HORA
+    if (campo.toLowerCase().includes('hora')) {
+      return valor;
+    }
+
+    return valor.toString();
+  } getStatusLabel(status: number): string {
+    switch (status) {
+      case 1: return 'A Fazer';
+      case 2: return 'Em Andamento';
+      case 3: return 'Concluído';
+      case 4: return 'Cancelado';
+      default: return '---';
+    }
+  }
+  getModalidadeLabel(status: number): string {
+    switch (status) {
+      case 1: return 'Presencial';
+      case 2: return 'Online';
+      case 3: return 'Hibrido ';
+      case 4: return 'Nao se aplica';
+      default: return '---';
+    }
+  } getMudancas(h: any): { campo: string, antes: any, depois: any }[] {
+    if (!h.antes || !h.depois) return [];
+
+    const mudancas: any[] = [];
+
+    Object.keys(h.depois).forEach(key => {
+      const antes = h.antes[key];
+      const depois = h.depois[key];
+
+      if (JSON.stringify(antes) !== JSON.stringify(depois)) {
+        mudancas.push({ campo: key, antes, depois });
+      }
+    });
+
+    return mudancas;
+  }
+}

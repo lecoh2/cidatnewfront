@@ -1,0 +1,495 @@
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+
+import { Router } from '@angular/router';
+import { KanbanColuna } from '../../../../../core/models/kanban/kanban-coluna';
+import { KanbanService } from '../../../../../core/services/kanban.service';
+import { ComentarioService } from '../../../../../core/services/comenario.service';
+import { HistoricoService } from '../../../../../core/services/historico.service';
+import { CriarComentarioResponse } from '../../../../../core/models/comentario/criar-comentario-response';
+import { TipoEntidadeEnum } from '../../../../../core/models/enums/tipo-entidade/tipo-entidadeEnum';
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+declare var bootstrap: any;
+
+@Component({
+  selector: 'app-gestao-atividades',
+  standalone: false,
+  templateUrl: './gestao-atividades.html',
+  styleUrl: './gestao-atividades.css'
+})
+export class GestaoAtividades implements OnInit {
+
+  colunas: KanbanColuna[] = [];
+  private colunasOriginais: KanbanColuna[] = [];
+
+  private kanbanService = inject(KanbanService);
+  private comentarioService = inject(ComentarioService)
+  private cdr = inject(ChangeDetectorRef);
+  private historicoService = inject(HistoricoService);
+  private router = inject(Router);
+  comentarios: CriarComentarioResponse[] = [];
+  novoComentario: string = '';
+  mensagemSucesso: string[] = [];
+  mensagemErro: string[] = [];
+  cardSelecionado: any = null;
+  isLoadingDetalhe = false;
+  cardIdSelecionado: string | null = null;
+  mensagemSucessoAtual: string | null = null;
+  mensagemErroAtual: string | null = null;
+
+  historico: any[] = [];
+  private modalInstance: any;
+  filtro = {
+    periodo: null as string | null,
+    atribuicao: null as string | null,
+    pessoaId: null as string | null,
+    tipo: null as string | null,
+    status: null as string | null
+  };
+
+  filtrarPorStatus(): void {
+
+    if (!this.filtro.status) {
+      this.colunas = structuredClone(this.colunasOriginais);
+      return;
+    }
+
+    this.colunas = this.colunasOriginais.map(coluna => ({
+      ...coluna,
+      cards: coluna.cards.filter(c => Number(c.status) === Number(this.filtro.status))
+    }));
+  }
+  prioridadeLabel: Record<number, string> = {
+    1: 'Baixa',
+    2: 'Média',
+    3: 'Alta',
+    4: 'Urgente'
+  };
+
+  prioridadeCor: Record<number, string> = {
+    1: '#2ecc71',
+    2: '#f1c40f',
+    3: '#e67e22',
+    4: '#e74c3c'
+  };
+  getPrioridadeLabel(p: number): string {
+    return this.prioridadeLabel[p] ?? '---';
+  }
+  getCorColuna(status: number): string {
+    switch (status) {
+      case 1: return 'bg-secondary';   // A Fazer
+      case 2: return 'bg-primary';     // Em Andamento
+      case 3: return 'bg-success';     // Concluído
+      // Cancelado
+      default: return 'bg-dark';
+    }
+  }
+  getPrioridadeCor(p: number): string {
+    return this.prioridadeCor[p] ?? '#6c757d';
+  }
+  getPrioridade(p?: number | null): { label: string; cor: string } {
+    if (!p) {
+      return { label: 'Sem prioridade', cor: '#6c757d' };
+    }
+
+    switch (p) {
+      case 1: return { label: 'Baixa', cor: '#2ecc71' };
+      case 2: return { label: 'Média', cor: '#f1c40f' };
+      case 3: return { label: 'Alta', cor: '#e67e22' };
+      case 4: return { label: 'Urgente', cor: '#e74c3c' };
+      default: return { label: '---', cor: '#6c757d' };
+    }
+  }
+  limparFiltro(): void {
+
+    this.filtro = {
+      periodo: null,
+      atribuicao: null,
+      pessoaId: null,
+      tipo: null,
+      status: null
+    };
+
+    this.aplicarFiltro(); // 🔥 NÃO usa structuredClone direto
+  }
+  aplicarFiltro(): void {
+
+  let dados = structuredClone(this.colunasOriginais);
+
+  const statusFiltro = this.filtro.status
+    ? Number(this.filtro.status)
+    : null;
+
+  const tipoFiltro = (this.filtro.tipo ?? '')
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  dados = dados.map(coluna => {
+
+    let cards = coluna.cards ?? [];
+
+    if (statusFiltro != null) {
+      cards = cards.filter(c => Number(c.status) === statusFiltro);
+    }
+
+    if (tipoFiltro) {
+      cards = cards.filter(c =>
+        (c.tipo ?? '').toString().trim().toLowerCase() === tipoFiltro
+      );
+    }
+
+    return {
+      ...coluna,
+      cards
+    };
+  })
+  // 🔥 ISSO AQUI RESOLVE O BUG VISUAL
+  .filter(coluna => coluna.cards.length > 0);
+
+  this.colunas = dados;
+}
+  mudarStatus(id: string, status: number) {
+    this.kanbanService.atualizarStatus(id, status)
+      .subscribe(() => {
+        this.carregarKanban(); // 🔥 atualiza tela
+      });
+  }
+  ngOnInit(): void {
+
+    this.filtro = {
+      periodo: null,
+      atribuicao: null,
+      pessoaId: null,
+      tipo: null,
+      status: null
+    };
+
+    this.carregarKanban();
+  }
+  carregarKanban(): void {
+
+    this.kanbanService.consultar().subscribe({
+      next: (res) => {
+
+        const colunas = res
+          .filter(c => c.status !== 4)
+          .map(card => ({
+            ...card,
+            prioridade: card.prioridade ?? null,
+
+            // 🔥 NORMALIZA TIPO AQUI
+            tipo: (card.tipo ?? '').toString().trim().toLowerCase()
+          }))
+          .filter(c => c.cards.length > 0);
+
+        this.colunasOriginais = structuredClone(colunas);
+
+        // 🔥 força microtask para garantir render Angular
+        setTimeout(() => {
+          this.aplicarFiltro();
+          this.cdr.detectChanges();
+        });
+
+      }
+    });
+  }
+  getStatusLabel(status: number): string {
+    switch (status) {
+      case 1: return 'A Fazer';
+      case 2: return 'Em Andamento';
+      case 3: return 'Concluído';
+      case 4: return 'Cancelado';
+      default: return '---';
+    }
+  }
+  getModalidadeLabel(status: number): string {
+    switch (status) {
+      case 1: return 'Presencial';
+      case 2: return 'Online';
+      case 3: return 'Hibrido ';
+      case 4: return 'Nao se aplica';
+      default: return '---';
+    }
+  }
+  getMudancas(h: any): { campo: string, antes: any, depois: any }[] {
+    if (!h.antes || !h.depois) return [];
+
+    const mudancas: any[] = [];
+
+    Object.keys(h.depois).forEach(key => {
+      const antes = h.antes[key];
+      const depois = h.depois[key];
+
+      if (JSON.stringify(antes) !== JSON.stringify(depois)) {
+        mudancas.push({ campo: key, antes, depois });
+      }
+    });
+
+    return mudancas;
+  }
+
+  formatarCampo(campo: string): string {
+    const map: any = {
+      Titulo: 'Título',
+      DataInicial: 'Data Inicial',
+      DataFinal: 'Data Final',
+      HoraInicial: 'Hora Inicial',
+      HoraFinal: 'Hora Final',
+      DiaInteiro: 'Dia Inteiro',
+      Endereco: 'Endereço',
+      Observacao: 'Observação',
+      Modalidade: 'Modalidade',
+      StatusGeralKanban: 'Status',
+      Responsaveis: 'Responsáveis'
+    };
+
+    return map[campo] || campo;
+  }
+
+  formatarValor(valor: any, campo: string): string {
+
+    if (valor === null || valor === undefined) return '-';
+
+    // ARRAY (Responsáveis)
+    if (Array.isArray(valor)) {
+      return valor.join(', ');
+    }
+
+    // BOOLEAN
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sim' : 'Não';
+    }
+
+    // STATUS
+    if (campo === 'StatusGeralKanban') {
+      return this.getStatusLabel(valor);
+    }
+    // 🔥 MODALIDADE (AQUI)
+    if (campo === 'Modalidade') {
+      return this.getModalidadeLabel(valor);
+    }
+    // DATA
+    if (campo.toLowerCase().includes('data')) {
+      return new Date(valor).toLocaleDateString('pt-BR');
+    }
+
+    // HORA
+    if (campo.toLowerCase().includes('hora')) {
+      return valor;
+    }
+
+    return valor.toString();
+  }
+  selecionarCard(card: any): void {
+
+    this.cardSelecionado = card;
+    this.cardIdSelecionado = card.id;
+
+    this.mensagemSucessoAtual = null;
+    this.mensagemErroAtual = null;
+
+    this.comentarios = [];
+    this.novoComentario = '';
+
+    this.isLoadingDetalhe = true;
+
+    const el = document.getElementById('modalDetalhes');
+    this.modalInstance = bootstrap.Modal.getOrCreateInstance(el);
+    this.modalInstance.show();
+
+    // 🔥 AGORA SIM
+    this.carregarHistorico(card);
+
+    this.kanbanService.obterDetalhes(card.id, card.tipo)
+      .subscribe({
+        next: (res) => {
+
+
+          this.cardSelecionado = {
+            ...res,
+
+            // 🔥 mantém o vínculo que já veio do Kanban
+            vinculoDescricao: res.vinculoDescricao ?? this.cardSelecionado?.vinculoDescricao,
+            tipoVinculo: res.tipoVinculo ?? this.cardSelecionado?.tipoVinculo,
+
+            responsaveis: res.responsaveis ?? [],
+            etiquetas: res.etiquetas ?? []
+          };
+
+          this.isLoadingDetalhe = false;
+
+          this.carregarComentarios();
+
+          this.cdr.detectChanges();
+        },
+        error: () => this.isLoadingDetalhe = false
+      });
+  }
+  carregarHistorico(card: any) {
+
+    console.log('CARD RECEBIDO:', card);
+    console.log('TIPO:', card.tipo);
+
+    const entidade =
+      card.tipo?.toLowerCase?.() === 'evento'
+        ? TipoEntidadeEnum.Evento
+        : TipoEntidadeEnum.Tarefa;
+
+    console.log('ENTIDADE ENVIADA:', entidade);
+
+    this.historicoService
+      .ConsultarHistorico(entidade, card.id)
+      .subscribe({
+        next: (res) => {
+          console.log('HISTÓRICO RECEBIDO:', res);
+          this.historico = (res ?? []).map(h => ({
+            ...h,
+            antes: h.dadosAntes ? JSON.parse(h.dadosAntes) : null,
+            depois: h.dadosDepois ? JSON.parse(h.dadosDepois) : null
+          }));
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('ERRO HISTÓRICO:', err);
+        }
+      });
+  }
+  adicionarComentario() {
+
+    if (!this.novoComentario?.trim()) return;
+
+    const request = {
+      tarefaId: this.cardSelecionado.tipo === 'Tarefa'
+        ? this.cardSelecionado.id
+        : null,
+
+      eventoId: this.cardSelecionado.tipo === 'Evento'
+        ? this.cardSelecionado.id
+        : null,
+
+      texto: this.novoComentario
+    };
+
+    this.comentarioService.criarComentario(request).subscribe({
+      next: (res) => {
+
+        this.novoComentario = '';
+
+        // 🔥 AQUI É O SEGREDO
+        this.mensagemSucessoAtual =
+          res?.message ?? 'Comentário cadastrado com sucesso';
+
+        this.mensagemErroAtual = null;
+
+        this.carregarComentarios();
+
+        this.cdr.detectChanges();
+
+        // auto remove
+        setTimeout(() => {
+          this.mensagemSucessoAtual = null;
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: () => {
+        this.mensagemErroAtual = 'Erro ao cadastrar comentário';
+      }
+    });
+  }
+  carregarComentarios() {
+
+    if (!this.cardSelecionado) return;
+
+    const params: any = {};
+
+    if (this.cardSelecionado.tipo === 'Tarefa') {
+      params.tarefaId = this.cardSelecionado.id;
+    }
+
+    if (this.cardSelecionado.tipo === 'Evento') {
+      params.eventoId = this.cardSelecionado.id;
+    }
+
+    this.comentarioService.obterComentario(params)
+      .subscribe({
+        next: (res) => {
+          this.comentarios = res ?? [];
+          this.cdr.detectChanges();
+        }
+      });
+  }
+  editar(id: string, tipo: string) {
+
+    const tipoNormalizado = tipo?.toLowerCase();
+
+    console.log('TIPO RECEBIDO:', tipo);
+    console.log('TIPO NORMALIZADO:', tipoNormalizado);
+
+    const modalElement = document.getElementById('modalDetalhes');
+
+    if (modalElement) {
+      const modal = (window as any).bootstrap?.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+
+    setTimeout(() => {
+
+      if (tipoNormalizado === 'tarefa') {
+        this.router.navigate(['/admin/editar-tarefa', id]);
+      } else {
+        this.router.navigate(['/admin/editar-evento', id]);
+      }
+
+    }, 200);
+  } getTipoVinculoLabel(tipo?: number | null): string {
+    switch (tipo) {
+      case 1: return 'Processo';
+      case 2: return 'Caso';
+      case 3: return 'Atendimento';
+      default: return '';
+    }
+  }
+  drop(event: CdkDragDrop<any[]>, colunaDestino: any): void {
+
+    const card = event.item.data;
+
+    //  mesma coluna → só reordena
+    if (event.previousContainer === event.container) {
+      moveItemInArray(
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+      return;
+    }
+
+    // 🔹 mudou de coluna → move visualmente
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex
+    );
+
+    // 🔥 novo status vindo da coluna destino
+    const novoStatus = colunaDestino.status;
+
+    // 🔥 chama seu backend já existente
+    this.kanbanService.atualizarStatus(card.id, novoStatus)
+      .subscribe({
+        next: () => {
+          // atualiza local sem reload
+          card.status = novoStatus;
+        },
+        error: () => {
+          // rollback simples (seguro)
+          this.carregarKanban();
+        }
+      });
+  }
+}
