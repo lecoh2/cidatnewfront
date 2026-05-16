@@ -515,7 +515,7 @@ export class CadastrarPessoas implements OnInit {
       console.log("FORM:", this.form.value);
       const request: PessoaFisicaRequest = {
         //idUsuario: this.form.value.idUsuario ?? undefined,
-        idUsuario: this.usuarioLogado?.id ?? undefined,
+        idUsuario: this.usuarioLogado?.idUsuario ?? undefined,
         nome: formValue.nome!,
         apelido: formValue.apelido!,
         telefone: formValue.telefone!,
@@ -559,7 +559,7 @@ export class CadastrarPessoas implements OnInit {
 
       const request: PessoaJuridicaRequest = {
 
-       idUsuario: this.usuarioLogado?.id ?? undefined,
+       idUsuario: this.usuarioLogado?.idUsuario ?? undefined,
         nome: formValue.nome!,
         apelido: formValue.apelido!,
         site: formValue.site!,

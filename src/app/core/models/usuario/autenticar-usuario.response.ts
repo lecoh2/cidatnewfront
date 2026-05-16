@@ -4,7 +4,7 @@ export interface NivelUsuario {
 }
 
 export interface AutenticarUsuarioResponse {
-  id: string;
+  idUsuario: string;
   login: string;
   nomeUsuario: string;
   sexo: string;

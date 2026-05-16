@@ -5,6 +5,7 @@ import { AuthHelper } from '../../../../core/helpers/auth.helper';
 import { DashboardService } from '../../../../core/services/dashboard.service';
 import { ProcessoResumoResponse } from '../../../../core/models/processo-resumo/processo-resumo-response';
 import { ObterTarefaResponse } from '../../../../core/models/tarefa/obter-tarefa-response';
+import { LembreteResponse } from '../../../../core/models/lembrete/lembrete-response';
 
 
 @Component({
@@ -31,7 +32,7 @@ export class PainelPrincipal implements OnInit {
   totalAtendimentoAnoAtual: number = 0;
   totalAtendimento: number = 0;
   currentYear = new Date().getFullYear();
-
+  lembretes: LembreteResponse[] = [];
   clientesExpandidos: Set<string> = new Set();
   nomeUsuario = '';
   sexoUsuario = '';
@@ -41,6 +42,7 @@ export class PainelPrincipal implements OnInit {
     this.carregarProcessos();
     this.carregarTarefas();
     this.carregarTotais();
+    this.carregarLembretes();
    
   }
 
@@ -50,8 +52,51 @@ export class PainelPrincipal implements OnInit {
     this.nomeUsuario = usuario?.nomeUsuario ?? 'Usuário';
     this.sexoUsuario = usuario?.sexo ?? 'Masculino';
   }
+  obterLinkLembrete(item: any): string[] {
 
+    // EVENTO
+    if (item.tipo === 'Evento') {
+      return [
+        '/admin',
+        'editar-evento',
+        item.id
+      ];
+    }
 
+    // TAREFA
+    if (item.tipo === 'Tarefa') {
+      return [
+        '/admin',
+        'editar-tarefa',
+        item.id
+      ];
+    }
+
+    return ['/admin'];
+  }
+  private carregarLembretes(): void {
+
+    this.dashboardService
+      .getLembretes()
+      .subscribe({
+
+        next: (res) => {
+
+          console.log('LEMBRETES:', res);
+
+          this.lembretes = res ?? [];
+
+          this.cdr.markForCheck();
+        },
+
+        error: (err) => {
+
+          console.error('Erro ao carregar lembretes', err);
+
+          this.lembretes = [];
+        }
+      });
+  }
   togglePasta(id: string): void {
     if (this.pastasExpandidas.has(id)) {
       this.pastasExpandidas.delete(id);

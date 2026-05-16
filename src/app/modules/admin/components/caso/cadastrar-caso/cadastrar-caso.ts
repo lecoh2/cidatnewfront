@@ -71,7 +71,7 @@ responsaveis: ConsultarUsuarioResponse[] = [];
 
     this.form.patchValue({
      
-       usuarioCadastroId: this.usuarioLogado?.id
+       usuarioCadastroId: this.usuarioLogado?.idUsuario
     });
 
     this.carregarDados();

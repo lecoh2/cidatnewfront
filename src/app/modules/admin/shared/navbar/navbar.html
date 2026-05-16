@@ -3,191 +3,162 @@
         <i class="hamburger align-self-center"></i>
     </a>
 
-
-
     <div class="navbar-collapse collapse">
         <ul class="navbar-nav navbar-align">
-            <li class="nav-item dropdown">
-                <a class="nav-icon dropdown-toggle" href="#" id="messagesDropdown" data-bs-toggle="dropdown">
-                    <div class="position-relative">
+<!-- 🔔 NOTIFICAÇÕES -->
+<li class="nav-item dropdown">
 
-                        <i class="fas fa-bell align-middle text-body"></i>
+    <a class="nav-icon dropdown-toggle"
+       href="#"
+       id="notifDropdown"
+       data-bs-toggle="dropdown">
 
-                        <span class="indicator bg-danger text-white" *ngIf="lembretes?.length">
-                            {{ lembretes.length }}
-                        </span>
-                    </div>
-                </a>
-                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="messagesDropdown">
+        <div class="position-relative">
 
-                    <!-- HEADER -->
-                    <div class="dropdown-menu-header">
-                        <div class="position-relative">
+            <i class="fas fa-bell align-middle text-body"></i>
 
-                            {{ lembretes.length }}
-                            Lembrete(s)
+            <!-- BADGE NÃO LIDAS -->
+            <span *ngIf="naoLidas > 0"
+                  class="indicator bg-danger text-white">
+
+                {{ naoLidas }}
+
+            </span>
+
+        </div>
+    </a>
+
+    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0">
+
+        <!-- HEADER -->
+        <div class="dropdown-menu-header">
+            <div class="position-relative">
+
+                {{ naoLidas }} Notificação(ões)
+
+            </div>
+        </div>
+
+        <!-- VAZIO -->
+        <div *ngIf="!notificacoes?.length"
+             class="p-3 text-center text-muted">
+
+            Nenhuma notificação encontrada
+
+        </div>
+
+        <!-- LISTA -->
+        <div class="list-group"
+             *ngIf="notificacoes.length > 0">
+
+            <div class="list-group-item list-group-item-action"
+                 *ngFor="let item of notificacoes"
+                 (click)="marcarComoLida(item)">
+
+                <div class="row g-0 align-items-center">
+
+                    <!-- ÍCONE -->
+                    <div class="col-2 text-center">
+
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto"
+                             style="width:40px;height:40px;">
+
+                            <i class="fas fa-bell text-white"></i>
 
                         </div>
-                    </div>
-
-                    <!-- SEM LEMBRETES -->
-                    <div *ngIf="!lembretes?.length" class="p-3 text-center text-muted">
-
-                        Nenhum lembrete encontrado
 
                     </div>
 
-                    <!-- LISTA -->
-                    <div class="list-group" *ngIf="lembretes?.length">
+                    <!-- CONTEÚDO -->
+                    <div class="col-10 ps-2">
 
-                        <a class="list-group-item list-group-item-action" *ngFor="let item of lembretes"
-                            [routerLink]="obterLinkLembrete(item)">
+                        <div>
+                            <strong>
+                                {{ item.titulo }}
+                            </strong>
+                        </div>
 
-                            <div class="row g-0 align-items-center">
+                        <div class="text-muted small">
+                            {{ item.mensagem }}
+                        </div>
 
-                                <!-- ÍCONE -->
-                                <div class="col-2 text-center">
+                        <div class="text-muted small mt-1">
 
-                                    <!-- EVENTO -->
-                                    <div *ngIf="item.tipo === 'Evento'"
-                                        class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto"
-                                        style="width:40px;height:40px;">
+                            <i class="fas fa-clock me-1"></i>
 
-                                        <i class="fas fa-calendar text-white"></i>
+                            {{ item.dataCriacao | date:'dd/MM/yyyy HH:mm' }}
 
-                                    </div>
+                        </div>
 
-                                    <!-- TAREFA -->
-                                    <div *ngIf="item.tipo === 'Tarefa'"
-                                        class="rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto"
-                                        style="width:40px;height:40px;">
+                        <!-- STATUS -->
+                        <span class="badge mt-1"
+                              [ngClass]="item.lida ? 'bg-secondary' : 'bg-danger'">
 
-                                        <i class="fas fa-tasks text-white"></i>
+                            {{ item.lida ? 'Lida' : 'Nova' }}
 
-                                    </div>
-
-                                </div>
-
-                                <!-- CONTEÚDO -->
-                                <div class="col-10 ps-2">
-
-                                    <!-- TÍTULO -->
-                                    <div>
-
-                                        <strong>
-                                            {{ item.titulo }}
-                                        </strong>
-
-                                    </div>
-
-                                    <!-- BADGES -->
-                                    <div class="mt-1">
-
-                                        <!-- CATEGORIA -->
-                                        <span class="badge me-1" [ngClass]="{
-                'bg-success': item.categoria === 'Hoje',
-                'bg-warning text-dark': item.categoria === 'Amanhã',
-                'bg-primary': item.categoria === 'Próximos'
-              }">
-
-                                            {{ item.categoria }}
-
-                                        </span>
-
-                                        <!-- RECORRENTE -->
-                                        <span *ngIf="item.recorrente" class="badge bg-info me-1">
-
-                                            Recorrente
-
-                                        </span>
-
-                                        <!-- DIA INTEIRO -->
-                                        <span *ngIf="item.diaInteiro" class="badge bg-dark">
-
-                                            Dia inteiro
-
-                                        </span>
-
-                                    </div>
-
-                                    <!-- DATA -->
-                                    <div class="text-muted small mt-1">
-
-                                        <i class="fas fa-clock me-1"></i>
-
-                                        {{ item.data | date:'dd/MM/yyyy HH:mm' }}
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </a>
+                        </span>
 
                     </div>
-
-                    <!-- FOOTER 
-                    <div class="dropdown-menu-footer">
-
-                        <a href="#" class="text-muted">
-
-                            Ver todos os lembretes
-
-                        </a>
-
-                    </div>-->
 
                 </div>
-            </li>
 
-            <!-- HTML -->
+            </div>
 
+        </div>
 
+    </div>
+</li>
+          
 
+            <!-- 🌙 THEME -->
             <li class="nav-item nav-theme-toggle dropdown">
-                <a class="nav-icon js-theme-toggle" href="#" (click)="toggleTheme(); $event.preventDefault()">
+                <a class="nav-icon js-theme-toggle"
+                   href="#"
+                   (click)="toggleTheme(); $event.preventDefault()">
+
                     <div class="position-relative">
-                        <i class="align-middle text-body nav-theme-toggle-light fas fa-fw fa-sun"></i>
-                        <i class="align-middle text-body nav-theme-toggle-dark fas fa-fw fa-moon"></i>
+                        <i class="fas fa-sun nav-theme-toggle-light"></i>
+                        <i class="fas fa-moon nav-theme-toggle-dark"></i>
                     </div>
+
                 </a>
             </li>
+
+            <!-- 👤 USUÁRIO -->
             <li class="nav-item dropdown">
-                <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#" data-bs-toggle="dropdown">
-                    <i class="align-middle" data-lucide="settings"></i>
+
+                <a class="nav-link dropdown-toggle d-none d-sm-inline-block"
+                   href="#"
+                   data-bs-toggle="dropdown">
+
+                    <img [src]="fotoUsuario"
+                         (error)="fotoUsuario='assets/appdeslandes/img/default-avatar.jpg'"
+                         alt="Foto do usuário"
+                         class="img-fluid rounded-circle border border-light border-2 me-1"
+                         style="width: 40px; height: 40px; object-fit: cover;">
+
+                    <span>{{ nomeUsuario?.split(' ')?.[0] }}</span>
+
                 </a>
 
-                <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-bs-toggle="dropdown">
-
-
-                    <img [src]="fotoUsuario" (error)="fotoUsuario='assets/appdeslandes/img/default-avatar.jpg'"
-                        alt="Foto do usuário"
-                        class="img-fluid rounded-circle border border-light border-2 me-1 mt-n2 mb-n2"
-                        style="width: 40px; height: 40px; object-fit: cover;">
-                    <span>{{ nomeUsuario.split(' ')[0] }}</span>
-                    <!--<span>{{ nomeUsuario.split(' ').slice(0, 2).join(' ') }}</span>-->
-                </a>
                 <div class="dropdown-menu dropdown-menu-end">
+
                     <a class="dropdown-item" [routerLink]="['/admin', 'perfil']">
                         <i class="fa-solid fa-user me-2"></i>
                         Perfil
                     </a>
 
-
                     <div class="dropdown-divider"></div>
-
-
 
                     <button class="dropdown-item" (click)="logout()">
                         <i class="fa-solid fa-right-from-bracket me-2"></i>
                         Sair do sistema
                     </button>
 
-
-
                 </div>
+
             </li>
+
         </ul>
     </div>
 </nav>

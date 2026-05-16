@@ -98,7 +98,7 @@ export class CadastrarProcesso implements OnInit {
     this.usuarioLogado = this.authHelper.get();
 
     if (this.usuarioLogado) {
-      this.form.get('idUsuario')?.setValue(this.usuarioLogado.id ?? null);
+      this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
     }
     // 🔥 DEBUG AQUI (coloque logo no início do init)
     this.form.get('acaoId')?.valueChanges.subscribe(v => {
@@ -326,7 +326,7 @@ private carregarDadosIniciais() {
     this.envolvidosSelecionados = [];
  this.etiquetasSelecionadas = [];
     if (this.usuarioLogado) {
-      this.form.get('idUsuario')?.setValue(this.usuarioLogado.id ?? null);
+      this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
     }
   }
 

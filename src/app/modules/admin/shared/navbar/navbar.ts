@@ -14,6 +14,10 @@ import { UsuarioService } from '../../../../core/services/usuario.service';
 import { environment } from '../../../../../environments/environment.development';
 import { LembreteResponse } from '../../../../core/models/lembrete/lembrete-response';
 import { DashboardService } from '../../../../core/services/dashboard.service';
+import { Notificacao } from '../../../../core/models/notficacao/notificacao';
+import { NotificacoService } from '../../../../core/services/notificacao.service';
+import { NotificacaoSignalRService } from '../../../../core/services/notificacao-signalr.service';
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-navbar',
   standalone: false,
@@ -27,9 +31,14 @@ export class Navbar implements OnInit, AfterViewInit, OnDestroy {
   private renderer = inject(Renderer2);
   private usuarioService = inject(UsuarioService);
   private cdr = inject(ChangeDetectorRef);
- private dashboardService = inject(DashboardService);
+  private dashboardService = inject(DashboardService);
+  private notificacaoService = inject(NotificacoService);
+   private notificacaoSignalR = inject(NotificacaoSignalRService);
   authHelper = inject(AuthHelper);
-lembretes: LembreteResponse[] = [];
+
+
+  notificacoes: Notificacao[] = [];
+
   // ATRIBUTOS
   nomeUsuario: string = 'Usuário';
   usuarioLogado: any = null;
@@ -38,125 +47,160 @@ lembretes: LembreteResponse[] = [];
     'assets/appdeslandes/img/default-avatar.jpg';
 
   // INIT
- ngOnInit(): void {
+ngOnInit(): void {
 
   this.carregarUsuario();
-   this.carregarLembretes();
+ 
+  this.carregarNotificacoes();
+
+  const usuario = this.authHelper.get();
+
+  if (usuario?.idUsuario) {
+    this.notificacaoSignalR.iniciar(
+      usuario.idUsuario,
+      (data) => {
+
+        console.log('🔔 SignalR recebido:', data);
+
+        this.notificacoes.unshift({
+          id: '',
+        usuarioId: usuario.idUsuario, // 👈 AQUI
+          titulo: data.titulo,
+          mensagem: data.mensagem,
+          lida: false,
+       dataCriacao: new Date().toISOString()
+        });
+
+        this.cdr.markForCheck();
+      }
+    );
+  }this.notificacaoSignalR.onNotificacaoLida((id: string) => {
+
+  const notificacao =
+    this.notificacoes.find(x => x.id === id);
+
+  if (notificacao) {
+
+    notificacao.lida = true;
+
+    this.cdr.markForCheck();
+  }
+});
 }
-obterLinkLembrete(item: any): string[] {
 
-  // EVENTO
-  if (item.tipo === 'Evento') {
+carregarNotificacoes() {
 
-    return [
-      '/admin',
-      'editar-evento',
-      item.id
-    ];
+ const usuario = this.authHelper.get();
+
+console.log('👤 USUARIO LOGADO:', usuario);
+
+if (!usuario?.idUsuario) return;
+
+this.notificacaoService
+  .getNotificacoes(usuario.idUsuario)
+  .subscribe({
+    next: (res) => {
+      console.log('🔔 NOTIFICAÇÕES:', res);
+
+      this.notificacoes = res ?? [];
+      this.cdr.markForCheck();
+    },
+    error: (err) => {
+      console.error('❌ Erro ao buscar notificações:', err);
+      this.notificacoes = [];
+    }
+  });
+}
+marcarComoLida(item: Notificacao): void {
+
+  if (!item?.id) return;
+
+  this.notificacaoService.marcarComoLida(item.id)
+    .subscribe({
+next: () => {
+
+  this.notificacoes =
+    this.notificacoes.filter(x => x.id !== item.id);
+
+  this.cdr.markForCheck();
+
+  Swal.fire({
+  toast: true,
+  position: 'top-end',
+  icon: 'success',
+
+  title: 'Marcada como lida',
+
+  showConfirmButton: false,
+  timer: 1800,
+  timerProgressBar: true,
+
+  background: '#1f2937',
+  color: '#fff',
+
+  iconColor: '#22c55e'
+});
+},
+      error: (err) => {
+        console.error('Erro ao marcar como lida:', err);
+      }
+    });
+}
+  get naoLidas() {
+    return (this.notificacoes ?? []).filter(x => !x.lida).length;
   }
 
-  // TAREFA
-  if (item.tipo === 'Tarefa') {
 
-    return [
-      '/admin',
-      'editar-tarefa',
-      item.id
-    ];
-  }
 
-  // fallback
-  return ['/admin'];
-}
   // DESTROY
   ngOnDestroy(): void {
     console.log('NAVBAR DESTRUIDA');
   }
 
-  // CARREGAR USUÁRIO
+  // USUÁRIO
   private carregarUsuario(): void {
 
-    // fallback SEMPRE primeiro
     this.fotoUsuario =
       'assets/appdeslandes/img/default-avatar.jpg';
 
-    // pega usuário
     this.usuarioLogado = this.authHelper.get();
 
-    // nome
     this.nomeUsuario =
       this.usuarioLogado?.nomeUsuario ?? 'Usuário';
 
-    // se não existir usuário, mantém fallback
-    if (!this.usuarioLogado?.idUsuario) {
-      return;
-    }
+    if (!this.usuarioLogado?.idUsuario) return;
 
-    // busca perfil atualizado
     this.usuarioService
-      .consultarPerfilUsuarioPorId(
-        this.usuarioLogado.idUsuario
-      )
+      .consultarPerfilUsuarioPorId(this.usuarioLogado.idUsuario)
       .subscribe({
 
         next: (usuario) => {
 
           const foto = usuario?.foto?.fileUrl;
 
-          // garante fallback seguro
           this.fotoUsuario =
             foto
               ? `${environment.apiDeslandes}${foto}`
               : 'assets/appdeslandes/img/default-avatar.jpg';
 
-          // força atualização visual Angular
-      this.cdr.markForCheck();
-
-          console.log(
-            'FOTO FINAL:',
-            this.fotoUsuario
-          );
+          this.cdr.markForCheck();
         },
 
         error: (err) => {
 
-          console.error(
-            'Erro ao carregar foto:',
-            err
-          );
+          console.error('Erro ao carregar foto:', err);
 
-          // fallback em caso de erro
           this.fotoUsuario =
             'assets/appdeslandes/img/default-avatar.jpg';
 
-       this.cdr.markForCheck();
+          this.cdr.markForCheck();
         }
       });
   }
-private carregarLembretes(): void {
 
-  this.dashboardService
-    .getLembretes()
-    .subscribe({
+  // LEMBRETES
 
-      next: (res) => {
 
-        console.log('LEMBRETES:', res);
-
-        this.lembretes = res ?? [];
-
-        this.cdr.detectChanges();
-      },
-
-      error: (err) => {
-
-        console.error(
-          'Erro ao carregar lembretes',
-          err
-        );
-      }
-    });
-}
   // SIDEBAR
   ngAfterViewInit(): void {
 
@@ -164,78 +208,48 @@ private carregarLembretes(): void {
       document.querySelector('.sidebar');
 
     const toggleBtn =
-      this.el.nativeElement.querySelector(
-        '.sidebar-toggle'
-      );
+      this.el.nativeElement.querySelector('.sidebar-toggle');
 
     if (sidebar && toggleBtn) {
 
-      this.renderer.listen(
-        toggleBtn,
-        'click',
-        () => {
+      this.renderer.listen(toggleBtn, 'click', () => {
 
-          sidebar.classList.toggle('collapsed');
+        sidebar.classList.toggle('collapsed');
 
-          window.dispatchEvent(
-            new Event('resize')
-          );
-        }
-      );
+        window.dispatchEvent(new Event('resize'));
+      });
     }
   }
 
   // TEMA
   toggleTheme(): void {
 
-    const themeKey =
-      'appstack-config-theme';
+    const themeKey = 'appstack-config-theme';
 
-    const currentTheme =
-      localStorage.getItem(themeKey);
+    const currentTheme = localStorage.getItem(themeKey);
 
     const newTheme =
-      currentTheme === 'dark'
-        ? 'default'
-        : 'dark';
+      currentTheme === 'dark' ? 'default' : 'dark';
 
-    document.documentElement.setAttribute(
-      'data-bs-theme',
-      newTheme
-    );
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    document.documentElement.setAttribute('data-sidebar-theme', newTheme);
 
-    document.documentElement.setAttribute(
-      'data-sidebar-theme',
-      newTheme
-    );
-
-    localStorage.setItem(
-      themeKey,
-      newTheme
-    );
+    localStorage.setItem(themeKey, newTheme);
 
     document.dispatchEvent(
-      new Event(
-        'DOMContentLoaded',
-        {
-          bubbles: true,
-          cancelable: true
-        }
-      )
+      new Event('DOMContentLoaded', {
+        bubbles: true,
+        cancelable: true
+      })
     );
   }
 
   // LOGOUT
   logout(): void {
 
-    if (
-      confirm(
-        `Deseja realmente sair do sistema, ${this.nomeUsuario}?`
-      )
-    ) {
+    if (confirm(`Deseja realmente sair do sistema, ${this.nomeUsuario}?`)) {
 
       this.authHelper.remove();
-
       location.reload();
     }
   }

@@ -104,6 +104,234 @@
     </div>
   </div>
   <div class="row">
+    <!-- 🔔 LEMBRETES -->
+<div class="col-12 col-lg-12 d-flex">
+
+  <div class="card flex-fill w-100">
+
+    <!-- HEADER -->
+    <div class="card-header">
+
+      <div class="card-actions float-end">
+
+        <span
+          class="badge bg-primary">
+
+          {{ lembretes?.length || 0 }}
+
+        </span>
+
+      </div>
+
+      <h5 class="card-title mb-0">
+
+        Lembretes e Pendências
+
+      </h5>
+
+    </div>
+
+    <!-- CARD BODY -->
+    <div class="card-body p-0">
+
+      <!-- SEM DADOS -->
+      <div
+        *ngIf="!lembretes?.length"
+        class="p-4 text-center text-muted">
+
+        Nenhum lembrete encontrado
+
+      </div>
+
+      <!-- TABELA -->
+      <table
+        class="table table-hover table-striped mb-0"
+        *ngIf="lembretes?.length">
+
+        <thead>
+
+          <tr>
+
+            <th>Tipo</th>
+
+            <th>Título</th>
+
+           
+
+            <th>Data</th>
+<th>Responsáveis</th>
+            <th class="text-end">
+              Ações
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let item of lembretes">
+
+            <!-- TIPO -->
+            <td class="align-middle">
+
+              <!-- EVENTO -->
+              <span
+                *ngIf="item.tipo === 'Evento'"
+                class="badge bg-primary">
+
+                <i class="fas fa-calendar me-1"></i>
+                Evento
+
+              </span>
+
+              <!-- TAREFA -->
+              <span
+                *ngIf="item.tipo === 'Tarefa'"
+                class="badge bg-success">
+
+                <i class="fas fa-tasks me-1"></i>
+                Tarefa
+
+              </span>
+
+            </td>
+
+            <!-- TITULO -->
+            <td class="align-middle">
+
+              <div class="fw-semibold">
+
+                {{ item.titulo }}
+
+              </div>
+
+              <!-- BADGES -->
+              <div class="mt-1">
+
+                <span
+                  *ngIf="item.recorrente"
+                  class="badge bg-info me-1">
+
+                  Recorrente
+
+                </span>
+
+                <span
+                  *ngIf="item.diaInteiro"
+                  class="badge bg-dark">
+
+                  Dia inteiro
+
+                </span>
+
+              </div>
+
+            </td>
+
+            <!-- CATEGORIA -->
+         
+
+            <!-- DATA -->
+            <td class="align-middle text-nowrap">
+
+              <i class="fas fa-clock me-1 text-muted"></i>
+
+              {{ item.data | date:'dd/MM/yyyy' }}
+       <span
+                class="badge"
+                [ngClass]="{
+                  'bg-success': item.categoria === 'Hoje',
+                  'bg-warning text-dark': item.categoria === 'Amanhã',
+                  'bg-primary': item.categoria === 'Próximos'
+                }">
+
+                {{ item.categoria }}
+
+              </span>
+            </td>
+<td class="align-middle">
+
+  <ng-container *ngIf="item.responsaveis?.length">
+
+    <!-- PRIMEIRO -->
+    <span>
+
+      {{ item.responsaveis[0] }}
+
+    </span>
+
+    <!-- +X -->
+    <div
+      *ngIf="item.responsaveis.length > 1"
+      class="d-inline-block ms-2 dropdown">
+
+      <button
+        class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2 dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown">
+
+        +{{ item.responsaveis.length - 1 }}
+
+      </button>
+
+      <!-- DROPDOWN -->
+      <ul class="dropdown-menu shadow border-0">
+
+        <li
+          *ngFor="let r of item.responsaveis.slice(1)">
+
+          <span class="dropdown-item small">
+
+            {{ r }}
+
+          </span>
+
+        </li>
+
+      </ul>
+
+    </div>
+
+  </ng-container>
+
+  <span
+    *ngIf="!item.responsaveis?.length"
+    class="text-muted">
+
+    Nenhum
+
+  </span>
+
+</td>
+            <!-- AÇÕES -->
+            <td class="text-end align-middle">
+
+              <a
+                [routerLink]="obterLinkLembrete(item)"
+                class="btn btn-sm btn-outline-primary rounded-pill">
+
+                <i class="fas fa-eye me-1"></i>
+
+                Abrir
+
+              </a>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+  </div>
+  <div class="row">
     <!-- TABELA -->
     <div class="col-12 col-lg-8 d-flex">
       <div class="card flex-fill w-100">

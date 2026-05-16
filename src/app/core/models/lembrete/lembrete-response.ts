@@ -12,4 +12,5 @@ export interface LembreteResponse {
   recorrente: boolean;
 
   diaInteiro: boolean;
+   responsaveis: string[];
 }

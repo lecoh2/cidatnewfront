@@ -250,7 +250,7 @@ export class CadastrarTarefa implements OnInit {
     const request: CadastrarTarefaRequest = {
       descricao: limpar(f.descricao) ?? '',
       dataTarefa: limpar(f.dataTarefa),
-      usuarioCriacaoId: this.usuarioLogado?.id,
+      usuarioCriacaoId: this.usuarioLogado?.idUsuario,
       responsavelId: limpar(f.responsavelId),
 
       processoId: limpar(f.processoId),
