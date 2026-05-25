@@ -56,24 +56,49 @@ ngOnInit(): void {
   const usuario = this.authHelper.get();
 
   if (usuario?.idUsuario) {
-    this.notificacaoSignalR.iniciar(
-      usuario.idUsuario,
-      (data) => {
+this.notificacaoSignalR.iniciar(
+  usuario.idUsuario,
+  (data) => {
 
-        console.log('🔔 SignalR recebido:', data);
+    console.log('🔔 SignalR recebido:', data);
 
-        this.notificacoes.unshift({
-          id: '',
-        usuarioId: usuario.idUsuario, // 👈 AQUI
-          titulo: data.titulo,
-          mensagem: data.mensagem,
-          lida: false,
-       dataCriacao: new Date().toISOString()
-        });
+    this.notificacoes.unshift({
+      id: '',
+      usuarioId: usuario.idUsuario,
+      titulo: data.titulo,
+      mensagem: data.mensagem,
+      lida: false,
+      dataCriacao: new Date().toISOString()
+    });
 
-        this.cdr.markForCheck();
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+
+      title: data.titulo,
+      text: data.mensagem,
+
+      showConfirmButton: false,
+      timer: 5000,
+      timerProgressBar: true,
+
+      background: '#1f2937',
+      color: '#fff',
+      iconColor: '#3b82f6',
+
+      showClass: {
+        popup: 'animate__animated animate__fadeInRight'
+      },
+
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutRight'
       }
-    );
+    });
+
+    this.cdr.markForCheck();
+  }
+);
   }this.notificacaoSignalR.onNotificacaoLida((id: string) => {
 
   const notificacao =

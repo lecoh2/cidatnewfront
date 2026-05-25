@@ -26,7 +26,17 @@
         <h5 class="mb-3">Dados do Atendimento</h5>
         <!-- ================= CLIENTES ================= -->
 
+<div
+  *ngIf="quantidadeAtendimentosMesmoProcesso > 0"
+  class="alert alert-warning mt-2">
 
+  Este cliente já possui
+  <strong>
+    {{ quantidadeAtendimentosMesmoProcesso }}
+  </strong>
+  atendimento(s) vinculados a este processo.
+
+</div>
         <div class="row mb-3">
           <div class="col-md-6">
             <app-autocomplete-pessoa-atendimento label="Clientes" placeholder="Digite o nome do cliente"

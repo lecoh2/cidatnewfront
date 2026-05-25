@@ -121,7 +121,13 @@ export class CadastrarPessoas implements OnInit {
       agencia: conta.agencia,
       numeroConta: conta.conta,
       pix: conta.pix,
-      tipoConta: conta.tipoConta === 'corrente' ? 1 : 2
+      // tipoConta: conta.tipoConta === 'corrente' ? 1 : 2
+      tipoConta:
+        conta.tipoConta === 'corrente'
+          ? 1
+          : conta.tipoConta === 'poupanca'
+            ? 2
+            : undefined
     };
 
     const temValor = Object.values(contaTratada).some(v => v);
@@ -179,9 +185,9 @@ export class CadastrarPessoas implements OnInit {
       // Recupera usuário logado
       this.usuarioLogado = this.authHelper.get();
 
-     // if (this.usuarioLogado) {
-       // this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
-     // }
+      // if (this.usuarioLogado) {
+      // this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
+      // }
 
       // estado inicial do tipo pessoa
       this.onTipoPessoaChange(this.tipoPessoaSelecionado);
@@ -497,8 +503,8 @@ export class CadastrarPessoas implements OnInit {
 
     const formValue = this.form.value;
 
-    const preencherNadaConsta = (campo: any) =>
-      campo ? campo : 'NADA CONSTA';
+    //const preencherNadaConsta = (campo: any) =>
+    //  campo ? campo : 'NADA CONSTA';
 
     const informacoes = limparNull(
       formValue.informacoesComplementares
@@ -514,22 +520,28 @@ export class CadastrarPessoas implements OnInit {
     if (this.tipoPessoaSelecionado === TipoPessoa.Fisica) {
       console.log("FORM:", this.form.value);
       const request: PessoaFisicaRequest = {
-        //idUsuario: this.form.value.idUsuario ?? undefined,
         idUsuario: this.usuarioLogado?.idUsuario ?? undefined,
+
         nome: formValue.nome!,
-        apelido: formValue.apelido!,
-        telefone: formValue.telefone!,
-        site: formValue.site!,
-        email: formValue.email!,
-        perfil: formValue.perfil ? Number(formValue.perfil) : undefined,
-        rg: preencherNadaConsta(formValue.rg),
+        apelido: formValue.apelido || undefined,
+        telefone: formValue.telefone || undefined,
+        site: formValue.site || undefined,
+        email: formValue.email || undefined,
+
+        perfil: formValue.perfil
+          ? Number(formValue.perfil)
+          : undefined,
+
+        rg: formValue.rg || undefined,
         cpf: formValue.cpf!,
-        tituloEleitor: preencherNadaConsta(formValue.tituloEleitor),
-        carteiraTrabalho: preencherNadaConsta(formValue.carteiraTrabalho),
-        pisPasep: preencherNadaConsta(formValue.pisPasep),
-        cnh: preencherNadaConsta(formValue.cnh),
-        passaporte: preencherNadaConsta(formValue.passaporte),
-        certidaoReservista: preencherNadaConsta(formValue.certidaoReservista),
+
+        tituloEleitor: formValue.tituloEleitor || undefined,
+        carteiraTrabalho: formValue.carteiraTrabalho || undefined,
+        pisPasep: formValue.pisPasep || undefined,
+        cnh: formValue.cnh || undefined,
+        passaporte: formValue.passaporte || undefined,
+        certidaoReservista: formValue.certidaoReservista || undefined,
+
         endereco: endereco,
         informacoesComplementares: informacoes,
 
@@ -537,17 +549,18 @@ export class CadastrarPessoas implements OnInit {
           .filter(e => e.id)
           .map(e => ({ idEtiqueta: e.id! })),
 
-        // ✅ opcional direto (SEM IF e SEM SPREAD)
-        contaBancaria: contaBancaria as ContaBancariaRequest | undefined
+        contaBancaria: contaBancaria
       };
       console.log("REQUEST:", request);
 
       this.pessoaService.cadastrarPessoaFisica(request).subscribe({
         next: (response) => {
-          this.form.reset();
+          this.mensagemSucesso = [response?.message];
           this.carregando = false;
-       this.mensagemSucesso = [response?.message];
-          this.router.navigate(['/admin/cadastrar-pessoas']);
+          this.form.reset();
+          setTimeout(() => {
+            this.router.navigate(['/admin/cadastrar-pessoas']);
+          }, 2000);
         },
         error: (err: HttpErrorResponse) => this.tratarErro(err)
       });
@@ -559,18 +572,18 @@ export class CadastrarPessoas implements OnInit {
 
       const request: PessoaJuridicaRequest = {
 
-       idUsuario: this.usuarioLogado?.idUsuario ?? undefined,
+        idUsuario: this.usuarioLogado?.idUsuario ?? undefined,
         nome: formValue.nome!,
-        apelido: formValue.apelido!,
-        site: formValue.site!,
-        telefone: formValue.telefone!,
-        email: formValue.email!,
+        apelido: formValue.apelido || undefined,
+        site: formValue.site || undefined,
+        telefone: formValue.telefone || undefined,
+        email: formValue.email || undefined,
         cnpj: formValue.cnpj!,
 
-        inscricaoEstadual: preencherNadaConsta(formValue.inscricaoEstadual),
-        inscricaoMunicipal: preencherNadaConsta(formValue.inscricaoMunicipal),
+        inscricaoEstadual: formValue.inscricaoEstadual || undefined,
+        inscricaoMunicipal: formValue.inscricaoMunicipal || undefined,
 
-        atividadeEconomica: preencherNadaConsta(info?.atividadeEconomica),
+        atividadeEconomica: info?.atividadeEconomica || undefined,
 
         endereco: endereco,
         informacoesComplementares: informacoes,
@@ -582,19 +595,22 @@ export class CadastrarPessoas implements OnInit {
 
       this.pessoaService.cadastrarPessoaJuridica(request).subscribe({
         next: (response) => {
-          this.form.reset();
-          this.carregando = false;
-        this.mensagemSucesso = [response?.message];
-          this.router.navigate(['/admin/cadastrar-pessoas']);
+         this.mensagemSucesso = [response?.message];
+this.carregando = false;
+this.form.reset();
+
+setTimeout(() => {
+  this.router.navigate(['/admin/cadastrar-pessoas']);
+}, 2000);
         },
         error: (err: HttpErrorResponse) => this.tratarErro(err)
       });
     }
   }
- // validação para habilitar submit — exige PF e PJ pelo seu requisito original
- get podeEnviar(): boolean {
-    return this.form.valid;
-  }
+  // validação para habilitar submit — exige PF e PJ pelo seu requisito original
+get podeEnviar(): boolean {
+  return this.form.valid && !this.carregando;
+}
 
 
   // ================== Tratar Erros ==================

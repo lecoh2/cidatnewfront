@@ -1,0 +1,49 @@
+<div class="card flex-fill">
+
+  <div class="card-header">
+
+    <h5 class="card-title mb-0">
+
+      Histórico do Processo
+
+    </h5>
+
+  </div>
+
+  <div class="card-body">
+
+    <div
+      *ngIf="!historico?.length"
+      class="text-center text-muted py-3">
+
+      Nenhum histórico encontrado
+
+    </div>
+
+    <ul
+      class="timeline"
+      *ngIf="historico?.length">
+
+      <li
+        class="timeline-item"
+        *ngFor="let item of historico">
+
+        <div class="fw-semibold">
+
+          {{ item.descricao }}
+
+        </div>
+
+        <small class="text-muted">
+
+          {{ item.data | date:'dd/MM/yyyy HH:mm' }}
+
+        </small>
+
+      </li>
+
+    </ul>
+
+  </div>
+
+</div>

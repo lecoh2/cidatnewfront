@@ -9,16 +9,56 @@
     </div>
 
     <div class="card-body">
+<div class="alert alert-primary border-0 shadow-sm d-flex align-items-start p-3 mb-4 rounded-3 alert-dismissible fade show"
+  role="alert">
 
+  <div class="me-3 mt-1">
+    <i class="fas fa-circle-info fs-4 text-white bg-primary rounded-circle p-2"></i>
+  </div>
+
+  <div class="flex-grow-1">
+    <h6 class="fw-bold mb-1">
+      Informações obrigatórias para cadastro
+    </h6>
+
+    <p class="mb-1">
+      Para concluir o cadastro, é necessário informar o
+      <strong>Nome</strong> e também:
+      <strong>CPF</strong> para <strong>Pessoa Física</strong>
+      ou
+      <strong>CNPJ</strong> para <strong>Pessoa Jurídica</strong>.
+    </p>
+
+    <small class="text-muted">
+      Os demais campos do formulário são opcionais.
+    </small>
+  </div>
+
+  <button type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close">
+  </button>
+
+</div>
       <!-- SPINNER / ALERTAS -->
       <app-spinner *ngIf="carregando" [show]="true" message="Cadastrando..."></app-spinner>
 
-      <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
-        tipo="success">
-      </app-alerts>
+   <app-alerts
+  *ngIf="!carregando && mensagemSucesso.length"
+  titulo="Sucesso!"
+  [mensagens]="mensagemSucesso"
+  tipo="success"
+  [icone]="'fas fa-check-circle'">
+</app-alerts>
 
-      <app-alerts *ngIf="!carregando && mensagemErro.length" titulo="Erro!" [mensagens]="mensagemErro" tipo="danger">
-      </app-alerts>
+  <app-alerts
+  *ngIf="!carregando && mensagemErro.length"
+  titulo="Erro!"
+  [mensagens]="mensagemErro"
+  tipo="danger"
+  [icone]="'fas fa-exclamation-circle'">
+</app-alerts>
 
       <!-- TIPO -->
       <div class="mb-3">
@@ -69,6 +109,12 @@
                 {{ tipoPessoaSelecionado === tipoPessoaEnum.Fisica ? 'Nome *' : 'Empresa *' }}
               </label>
               <input class="form-control" formControlName="nome" placeholder="Informe o nome">
+                    <div *ngIf="form.get('nome')?.touched && form.get('nome')?.invalid"
+                                    class="text-danger">
+                                    <span *ngIf="form.get('nome')?.hasError('required')">O nome é de
+                                        preenchimento
+                                        obrigatório.</span>
+                                </div>
             </div>
             <!-- PERFIL -->
             <div class="col-md-4">
@@ -88,8 +134,8 @@
               </label>
               <input class="form-control" formControlName="apelido" placeholder="Informe o apelido">
             </div>
-            <app-etiquetas [etiquetas]="tiposetiquetas" [(selecionadas)]="etiquetasSelecionadas">
-            </app-etiquetas>
+           <!-- <app-etiquetas [etiquetas]="tiposetiquetas" [(selecionadas)]="etiquetasSelecionadas">
+            </app-etiquetas>-->
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Telefone(s) </label>
@@ -328,6 +374,12 @@
               <div class="col-md-4">
                 <label class="form-label">CPF </label>
                 <input class="form-control" mask="000.000.000-00" formControlName="cpf" placeholder="Informe o CPF" />
+                     <div *ngIf="form.get('cpf')?.touched && form.get('cpf')?.invalid"
+                                    class="text-danger">
+                                    <span *ngIf="form.get('cpf')?.hasError('required')">O CPF é de
+                                        preenchimento
+                                        obrigatório.</span>
+                                </div>
               </div>
 
               <div class="col-md-4">
@@ -385,6 +437,12 @@
                 <label class="form-label">CNPJ </label>
                 <input class="form-control" formControlName="cnpj" mask="00.000.000/0000-00"
                   placeholder="Informe o CNPJ" />
+                     <div *ngIf="form.get('cnpj')?.touched && form.get('cnpj')?.invalid"
+                                    class="text-danger">
+                                    <span *ngIf="form.get('cnpj')?.hasError('required')">O CNPJ é de
+                                        preenchimento
+                                        obrigatório.</span>
+                                </div>
               </div>
 
               <div class="col-md-6">
@@ -421,9 +479,12 @@
         </div>
 
         <!-- BOTÃO -->
-        <button type="submit" class="btn btn-primary mt-3" [disabled]="carregando">
-          <i class="fas fa-save"></i> Salvar
-        </button>
+<button 
+  type="submit"
+  class="btn btn-primary mt-3"
+  [disabled]="!podeEnviar">
+  <i class="fas fa-save"></i> Salvar
+</button>
 
       </form>
     </div>

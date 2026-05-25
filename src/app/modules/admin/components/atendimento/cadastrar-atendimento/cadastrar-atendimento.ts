@@ -89,7 +89,7 @@ export class CadastrarAtendimento implements OnInit {
   mensagemSucesso: string[] = [];
 
   carregando = false;
-
+quantidadeAtendimentosMesmoProcesso = 0;
   // =========================
   // AUTOCOMPLETE VÍNCULO
   // =========================
@@ -373,18 +373,29 @@ export class CadastrarAtendimento implements OnInit {
       .cadastrarAtendimento(request)
       .subscribe({
 
-        next: (res) => {
+ next: (res) => {
 
-          this.resetar();
+  this.resetar();
 
-          this.carregando = false;
+  this.carregando = false;
 
-          this.mensagemSucesso = [res.message];
+  this.mensagemSucesso = [res.message];
 
-          this.router.navigate([
-            '/admin/cadastrar-atendimento'
-          ]);
-        },
+  // 🔥 QUANTIDADE DE ATENDIMENTOS
+  const quantidade =
+    res.data.quantidadeAtendimentosMesmoProcesso;
+
+  if (quantidade > 0) {
+
+    this.mensagemSucesso.push(
+      `Este cliente já possui ${quantidade} atendimento(s) neste processo.`
+    );
+  }
+
+  this.router.navigate([
+    '/admin/cadastrar-atendimento'
+  ]);
+},
 
         error: (err: HttpErrorResponse) => {
           this.tratarErro(err);

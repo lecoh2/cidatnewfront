@@ -1,0 +1,451 @@
+<div class="container-fluid p-0">
+
+  <!-- ===================================== -->
+  <!-- HEADER -->
+  <!-- ===================================== -->
+  <div class="row mb-3">
+
+    <div class="col-auto">
+
+      <h3 class="mb-1">
+
+        <i class="fas fa-folder-open me-2 text-primary"></i>
+
+        Detalhes do Processo
+
+      </h3>
+
+      <div class="text-muted">
+
+        Dashboard completo de movimentações e atendimentos
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===================================== -->
+  <!-- ALERTAS -->
+  <!-- ===================================== -->
+  <app-alerts
+    *ngIf="mensagemErro.length"
+    titulo="Erro"
+    tipo="danger"
+    [mensagens]="mensagemErro">
+  </app-alerts>
+
+  <!-- ===================================== -->
+  <!-- SPINNER -->
+  <!-- ===================================== -->
+  <app-spinner
+    *ngIf="carregando"
+    [show]="true"
+    message="Carregando processo...">
+  </app-spinner>
+
+  <!-- ===================================== -->
+  <!-- CONTEÚDO -->
+  <!-- ===================================== -->
+  <div *ngIf="processo && !carregando">
+
+    <!-- ===================================== -->
+    <!-- CARDS -->
+    <!-- ===================================== -->
+ <app-dashboard-cards
+  [processo]="processo"
+  [atendimentos]="atendimentosPorCliente">
+</app-dashboard-cards>
+
+    <!-- ===================================== -->
+    <!-- LINHA 1 -->
+    <!-- ===================================== -->
+    <div class="row mt-3">
+
+      <!-- ATENDIMENTOS -->
+       <div class="col-12 col-lg-12 d-flex">
+
+        <app-dashboard-atendimentos
+          class="w-100"
+          [atendimentos]="atendimentosPorCliente">
+        </app-dashboard-atendimentos>
+
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="col-12 col-lg-12 d-flex">
+
+        <app-dashboard-clientes
+          class="w-100"
+          [clientes]="atendimentosPorCliente">
+        </app-dashboard-clientes>
+
+      </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- LINHA 2 -->
+    <!-- ===================================== -->
+    <div class="row mt-3">
+
+      <!-- GRÁFICO -->
+       <div class="col-12 col-lg-8 d-flex">
+
+     <app-dashboard-grafico
+  [atendimentos]="atendimentosPorCliente">
+</app-dashboard-grafico>
+
+      </div>
+
+      <!-- TIMELINE -->
+       <div class="col-12 col-lg-4 d-flex">
+
+        <app-dashboard-timeline
+          class="w-100"
+          [timeline]="atendimentosPorCliente">
+        </app-dashboard-timeline>
+
+      </div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- LINHA 3 -->
+    <!-- ===================================== -->
+    <div class="row mt-3">
+
+      <!-- LOCALIZAÇÕES -->
+       <div class="col-12 col-lg-6 d-flex">
+
+        <app-dashboard-localizacoes
+          class="w-100"
+          [localizacoes]="processo?.localizacoes">
+        </app-dashboard-localizacoes>
+
+      </div>
+
+      <!-- DADOS PROCESSO -->
+    <div class="col-12 col-lg-6 d-flex">
+
+  <div class="card flex-fill w-100 border-0 shadow-sm">
+
+    <!-- HEADER -->
+    <div class="card-header border-0 bg-transparent">
+
+      <h5 class="card-title mb-0 fw-semibold">
+
+        <i class="fas fa-folder-open text-primary me-2"></i>
+
+        Dados do Processo
+
+      </h5>
+
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <div class="row g-3">
+
+        <!-- PASTA -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-folder me-2 text-primary"></i>
+
+              Pasta
+
+            </label>
+
+            <div class="fw-semibold">
+
+              {{ processo?.pasta || '-' }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- NUMERO -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-hashtag me-2 text-primary"></i>
+
+              Número Processo
+
+            </label>
+
+            <div class="fw-semibold ">
+
+              {{formatarNumeroProcesso(processo?.numeroProcesso) || '-' }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TITULO -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-heading me-2 text-primary"></i>
+
+              Título
+
+            </label>
+
+            <div class="fw-semibold ">
+
+              {{ processo?.titulo || '-' }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ACESSO -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-lock me-2 text-primary"></i>
+
+              Acesso
+
+            </label>
+
+            <div>
+
+              <span class="badge bg-primary px-3 py-2">
+
+                <i class="fas fa-shield-alt me-1"></i>
+
+                {{ processo?.acesso }}
+
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- DISTRIBUIÇÃO -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-calendar-check me-2 text-primary"></i>
+
+              Distribuído em
+
+            </label>
+
+            <div class="fw-semibold ">
+
+              {{ processo?.distribuido | date:'dd/MM/yyyy' }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RESPONSÁVEL -->
+        <div class="col-md-6">
+
+          <div class="border rounded p-3 h-100">
+
+            <label class="text-muted small d-flex align-items-center">
+
+              <i class="fas fa-user-tie me-2 text-primary"></i>
+
+              Responsável
+
+            </label>
+
+            <div class="fw-semibold ">
+
+              {{
+                processo?.usuarioResponsavel?.nome
+                || '-'
+              }}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+    </div>
+
+    <!-- ===================================== -->
+    <!-- LINHA 4 -->
+    <!-- ===================================== -->
+    <div class="row mt-3">
+
+      <!-- CLIENTES PROCESSO -->
+      <div class="col-12 col-xl-6 d-flex">
+
+        <div class="card flex-fill w-100">
+
+          <div class="card-header">
+
+            <h5 class="card-title mb-0">
+
+              Clientes do Processo
+
+            </h5>
+
+          </div>
+
+          <div class="card-body p-0">
+
+            <table
+              class="table table-hover table-striped mb-0">
+
+              <thead>
+
+                <tr>
+
+                  <th>Nome</th>
+
+                  <th>Qualificação</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                <tr
+                  *ngFor="
+                    let item of processo?.grupoClienteProcesso
+                  ">
+
+                  <td>
+
+                    {{ item.nome }}
+
+                  </td>
+
+                  <td>
+
+                    <span class="badge bg-info">
+
+                      {{ item.nomeQualificacao }}
+
+                    </span>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ENVOLVIDOS -->
+      <div class="col-12 col-xl-6 d-flex">
+
+        <div class="card flex-fill w-100">
+
+          <div class="card-header">
+
+            <h5 class="card-title mb-0">
+
+              Envolvidos
+
+            </h5>
+
+          </div>
+
+          <div class="card-body p-0">
+
+            <table
+              class="table table-hover table-striped mb-0">
+
+              <thead>
+
+                <tr>
+
+                  <th>Nome</th>
+
+                  <th>Qualificação</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                <tr
+                  *ngFor="
+                    let item of processo?.grupoEnvolvidosProcesso
+                  ">
+
+                  <td>
+
+                    {{ item.nome }}
+
+                  </td>
+
+                  <td>
+
+                    <span class="badge bg-secondary">
+
+                      {{ item.nomeQualificacao }}
+
+                    </span>
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

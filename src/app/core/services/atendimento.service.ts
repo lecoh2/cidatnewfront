@@ -6,9 +6,11 @@ import { Observable } from "rxjs";
 
 import { ApiResponse } from "../models/respostas/api-response";
 import { CriarAtendimentoClienteRequest } from "../models/atendimento/criar-atendimento-cliente-request";
-import { CriarAtendimentoClienteResponse } from "../models/atendimento/criar-atendimento-response";
+
 import { AtendimentoAutoComplete } from "../models/atendimento/atendimento-auto-complete";
 import { ObterAtendimentoResponse } from "../models/atendimento/obter-atendimento-response";
+import { CriarAtendimentoClienteResponse } from "../models/atendimento/criar-atendimento-response";
+import { AtendimentoPorCliente } from "../models/atendimento/atendimento-por-cliente";
 
 @Injectable({
   providedIn: 'root' // Isso registra o serviço automaticamente no app
@@ -72,7 +74,9 @@ atualizarAtendimento(id: string, request: any): Observable<any> {
         : {}
     }
   );
+  
 }
+
 /*
     cadastrarPJ(request: CadastrarAtendimentoRequest): Observable<CadastrarAtendimentoResponse> {
     return this.http.post<CadastrarAtendimentoResponse>

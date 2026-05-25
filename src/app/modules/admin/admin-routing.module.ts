@@ -31,6 +31,8 @@ import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 import { Perfil } from "./components/usuario/perfil/perfil";
 import { EditarUsuario } from "./components/usuario/editar-usuario/editar-usuario";
 import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consultar-usuarios";
+import { ImportarProcessoExcel } from "./components/processo/importar/importar-processo-excel";
+import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
 //import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 
 
@@ -45,7 +47,7 @@ export const routes: Routes = [
                 component: PainelPrincipal,
                 canActivate: [AuthGuard] // apenas logado
             },
-               //pessoas
+            //pessoas
             {
                 path: 'cadastrar-pessoas',
                 component: CadastrarPessoas,
@@ -60,15 +62,16 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-//processo
-              {
+            //processo
+            {
                 path: 'cadastrar-processo',
                 component: CadastrarProcesso,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
-            },{
-              path: 'editar-processo/:id',
+            },
+             {
+                path: 'editar-processo/:id',
                 component: EditarProcesso,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
@@ -81,70 +84,86 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
+
+            {
+                path: 'detalhes-processo/:id',
+                component: DetalhesProcesso,
+                canActivate: [AuthGuard, NivelGuard],
+                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+
+            },
+
+            {
+                path: 'importar-processo-excel',
+                component: ImportarProcessoExcel,
+                canActivate: [AuthGuard, NivelGuard],
+                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+
+            },
             //atendmento
-              {
+            {
                 path: 'cadastrar-atendimento',
                 component: CadastrarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
             },
-               {
+            {
                 path: 'consultar-atendimento',
                 component: ConsultarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
-            },     {
+            }, {
                 path: 'editar-atendimento/:id',
                 component: EditarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-               //ação
-              {
+            //ação
+            {
                 path: 'cadastrar-caso',
                 component: CadastrarCaso,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
-            },{
+            }, {
                 path: 'consultar-caso',
                 component: ConsultarCaso,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-                {
+            {
                 path: 'editar-caso/:id',
                 component: EditarCaso,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-               //tarefa
-              {
+            //tarefa
+            {
                 path: 'cadastrar-tarefa',
                 component: CadastrarTarefa,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },    //tarefa
-              {
+            {
                 path: 'editar-tarefa/:id',
                 component: EditarTarefa,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-               {
+            {
                 path: 'consultar-tarefa',
                 component: ConsultarTarefa,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-                {
+            {
                 path: 'cadastrar-evento',
                 component: CadastrarEvento,
                 canActivate: [AuthGuard, NivelGuard],
@@ -157,30 +176,30 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-              {
+            {
                 path: 'consultar-evento',
                 component: ConsultarEvento,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-             //atividades
-              {
+            //atividades
+            {
                 path: 'gestao-atividades',
                 component: GestaoAtividades,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-              {
+            {
                 path: 'agenda',
                 component: Agenda,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-              //usuario
-              {
+            //usuario
+            {
                 path: 'criar-usuario',
                 component: CriarUsuario,
                 canActivate: [AuthGuard, NivelGuard],

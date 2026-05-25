@@ -31,6 +31,8 @@ import { PessoaSelecionada } from '../../../../../core/models/pessoa/pessoa-sele
 import { PessoaResumo } from '../../../../../core/models/pessoa/pessoa-resumo';
 import { HistoricoService } from '../../../../../core/services/historico.service';
 import { TipoEntidadeEnum } from '../../../../../core/models/enums/tipo-entidade/tipo-entidadeEnum';
+import { ProcessoUpdateRequest } from '../../../../../core/models/processo/processo-update-request';
+import { ProcessoLocalPadraoResponse } from '../../../../../core/models/processo/processo-local-padrao-response';
 
 
 @Component({
@@ -87,8 +89,8 @@ export class EditarProcesso implements OnInit {
 
   instanciaEnum = InstanciaEnum;
   acessoEnum = AcessoEnum;
-
-
+  localizacoesProcesso: any[] = [];
+locais: ProcessoLocalPadraoResponse[] = [];
   form = this.builder.group({
     acaoId: [null],
     foroId: [null],
@@ -106,6 +108,9 @@ export class EditarProcesso implements OnInit {
     observacao: [''],
     instancia: [null],
     acesso: [null],
+      tipoProcesso: [null],
+    novaLocalizacao: [''],
+    localizacaoInicialId: [null, Validators.required]
   });
   private carregarDadosIniciais() {
     this.carregando = true;
@@ -116,22 +121,25 @@ export class EditarProcesso implements OnInit {
       acoes: this.acaoService.consultar(),
       usuarios: this.usuarioService.consultarUsuarioResponsavel(),
       qualificacoes: this.qualificacaoService.consultarQualificacoes(),
-      etiquetas: this.etiquetaService.consultar()
+      etiquetas: this.etiquetaService.consultar(),
+      localizacoes: this.processoService.consultarLocais()
     }).subscribe({
       next: (res) => {
-
-        const { varas, acoes, usuarios, qualificacoes, etiquetas } = res as {
+console.log('🔥 PROCESSO BACKEND:', res);
+        const { varas, acoes, usuarios, qualificacoes, etiquetas, localizacoes   } = res as {
           varas: ConsultarVaraResponse[];
           acoes: ConsultarAcaoResponse[];
           usuarios: ConsultarUsuarioResponse[];
           qualificacoes: QualificacaoResponse[];
           etiquetas: ConsultarEtiquetaResponse[];
+          localizacoes: ProcessoLocalPadraoResponse[];
+          
         };
 
         // 🔥 VARAS + FOROS
         this.varas = varas;
         this.varasFiltradas = varas;
-
+this.locais = localizacoes;
         const mapa = new Map<string, string>();
         varas.forEach(v => {
           if (v.foroId && v.nomeForo) {
@@ -146,6 +154,7 @@ export class EditarProcesso implements OnInit {
         this.responsaveis = usuarios;
         this.qualificacoes = qualificacoes;
         this.tiposetiquetas = etiquetas;
+        this.locais = localizacoes;
 
         // 🔥 IMPORTANTE (somente no EDITAR)
         if (this.id) {
@@ -208,7 +217,10 @@ export class EditarProcesso implements OnInit {
     this.processoService.ObterProcessoPorId(this.id).subscribe({
       next: (res: any) => {
         console.log('🔥 PROCESSO BACKEND:', res); // 👈 AQUI
-
+const atual = res.localizacoes
+  ?.slice()
+  .sort((a: any, b: any) => new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime())
+  .find((x: any) => x.atual);
         // FORM
         this.form.patchValue({
           acaoId: res.acaoId,
@@ -226,7 +238,10 @@ export class EditarProcesso implements OnInit {
           valorCondenacao: res.valorCondenacao,
           observacao: res.observacao,
           instancia: res.instancia,
-          acesso: res.acesso
+          acesso: res.acesso,
+      tipoProcesso: res.tipoProcesso,
+  novaLocalizacao: atual?.local ?? null,
+  localizacaoInicialId: atual?.id ?? null
         }, { emitEvent: false });
 
         // CLIENTES
@@ -282,7 +297,7 @@ export class EditarProcesso implements OnInit {
     const f = this.form.value;
     const limpar = (v: any) => v ?? undefined;
 
-    const request = {
+    const request: ProcessoUpdateRequest = {
       acaoId: limpar(f.acaoId),
       varaId: f.varaId!,
       usuarioResponsavelId: limpar(f.usuarioResponsavelId),
@@ -298,19 +313,21 @@ export class EditarProcesso implements OnInit {
       observacao: limpar(f.observacao),
       instancia: limpar(f.instancia),
       acesso: limpar(f.acesso),
-
+      tipoProcesso:limpar(f.tipoProcesso),
+      novaLocalizacao: limpar(f.novaLocalizacao),
+      localizacaoInicialId: limpar(f.localizacaoInicialId),
       grupoClienteProcesso: this.pessoasSelecionadas.map(p => ({
         idPessoa: p.id,
-        idQualificacao: p.idQualificacao
+        idQualificacao: p.idQualificacao ?? undefined
       })),
 
       grupoEnvolvidosProcesso: this.envolvidosSelecionados.map(e => ({
         idPessoa: e.id,
-        idQualificacao: e.idQualificacao
+        idQualificacao: e.idQualificacao ?? undefined
       })),
 
       grupoEtiquetasProcesso: this.etiquetasSelecionadas.map(e => ({
-        etiquetaId: e.id
+        etiquetaId: e.id!
       }))
     };
 
@@ -349,118 +366,145 @@ export class EditarProcesso implements OnInit {
     this.carregando = false;
   }
 
-  abrirHistoricoProcesso(processoId: string) {
+abrirHistoricoProcesso(processoId: string) {
 
-    this.carregandoHistorico = true;
-    this.historico = [];
+  this.carregandoHistorico = true;
 
-    const modal =
-      new bootstrap.Modal(
-        this.modalHistorico.nativeElement
-      );
+  this.historico = [];
 
-    modal.show();
+  const modal =
+    new bootstrap.Modal(
+      this.modalHistorico.nativeElement
+    );
 
-    this.historicoService
-      .ConsultarHistorico(
-        TipoEntidadeEnum.Processo,
-        processoId
-      )
-      .subscribe({
+  modal.show();
 
-        next: (res) => {
+  this.historicoService
+    .ConsultarHistorico(
+      TipoEntidadeEnum.Processo, // ✅ CORRETO
+      processoId
+    )
+    .subscribe({
 
-          this.historico = (res ?? []).map(h => ({
-            ...h,
-            antes: h.dadosAntes
-              ? JSON.parse(h.dadosAntes)
-              : null,
+      next: (res) => {
 
-            depois: h.dadosDepois
-              ? JSON.parse(h.dadosDepois)
-              : null
-          }));
+        this.historico = (res ?? []).map(h => ({
+          ...h,
+          antes: h.dadosAntes
+            ? JSON.parse(h.dadosAntes)
+            : null,
 
-          this.carregandoHistorico = false;
+          depois: h.dadosDepois
+            ? JSON.parse(h.dadosDepois)
+            : null
+        }));
 
-          this.cdr.detectChanges();
-        },
+        console.log('🔥 HISTORICO:', this.historico);
 
-        error: (err) => {
+        this.carregandoHistorico = false;
 
-          console.error(err);
+        this.cdr.detectChanges();
+      },
 
-          this.carregandoHistorico = false;
-        }
+      error: (err) => {
 
-      });
-  }
+        console.error(err);
 
-  getMudancas(h: any): { campo: string, antes: any, depois: any }[] {
-    if (!h.antes || !h.depois) return [];
-
-    const mudancas: any[] = [];
-
-    Object.keys(h.depois).forEach(key => {
-      const antes = h.antes[key];
-      const depois = h.depois[key];
-
-      if (JSON.stringify(antes) !== JSON.stringify(depois)) {
-        mudancas.push({ campo: key, antes, depois });
+        this.carregandoHistorico = false;
       }
+
     });
+}
 
-    return mudancas;
-  } formatarValor(valor: any, campo: string): string {
 
-    if (valor === null || valor === undefined) return '-';
 
-    // ARRAY (Responsáveis)
-    if (Array.isArray(valor)) {
-      return valor.join(', ');
-    }
+ formatarValor(valor: any, campo: string): string {
 
-    // BOOLEAN
-    if (typeof valor === 'boolean') {
-      return valor ? 'Sim' : 'Não';
-    }
+  if (valor === null || valor === undefined) return '-';
 
-    // STATUS
-
-    // DATA
-    if (campo.toLowerCase().includes('data')) {
-      return new Date(valor).toLocaleDateString('pt-BR');
-    }
-
-    // HORA
-    if (campo.toLowerCase().includes('hora')) {
-      return valor;
-    }
-
-    return valor.toString();
+  // ARRAY
+  if (Array.isArray(valor)) {
+    return valor.map(v => this.extrairTexto(v)).join(', ');
   }
 
-  formatarCampo(campo: string): string {
-
-    const map: any = {
-      Titulo: 'Título',
-      Pasta: 'Pasta',
-      NumeroProcesso: 'Número do Processo',
-      LinkTribunal: 'Link Tribunal',
-      Objeto: 'Objeto',
-      ValorCausa: 'Valor da Causa',
-      ValorCondenacao: 'Valor da Condenação',
-      Distribuido: 'Distribuído',
-      Observacao: 'Observação',
-      Instancia: 'Instância',
-      Acesso: 'Acesso',
-      NomeVara: 'Vara',
-      NomeForo: 'Foro',
-      Clientes: 'Clientes',
-      Envolvidos: 'Envolvidos',
-      Etiquetas: 'Etiquetas'
-    };
-
-    return map[campo] || campo;
+  // BOOLEAN
+  if (typeof valor === 'boolean') {
+    return valor ? 'Sim' : 'Não';
   }
+
+  // DATA
+ if (campo.toLowerCase().includes('data')) {
+  const d = new Date(valor);
+  return isNaN(d.getTime()) ? valor : d.toLocaleString('pt-BR');
+}
+
+  // OBJETO
+  if (typeof valor === 'object') {
+    return this.extrairTexto(valor);
+  }
+
+  return valor.toString();
+}
+private extrairTexto(obj: any): string {
+  if (!obj) return '-';
+
+  const normalizado = this.normalizarObjeto(obj);
+
+  return (
+    normalizado.local ||
+    normalizado.nome ||
+    normalizado.descricao ||
+    normalizado.titulo ||
+    JSON.stringify(obj)
+  );
+}
+private normalizarObjeto(obj: any): any {
+  const resultado: any = {};
+
+  Object.keys(obj).forEach(key => {
+    resultado[key.toLowerCase()] = obj[key];
+  });
+
+  return resultado;
+}
+formatarCampo(campo: string): string {
+
+  const map: any = {
+    titulo: 'Título',
+    pasta: 'Pasta',
+    numeroprocesso: 'Número do Processo',
+    linktribunal: 'Link Tribunal',
+    objeto: 'Objeto',
+    valorcausa: 'Valor da Causa',
+    valorcondenacao: 'Valor da Condenação',
+    distribuido: 'Distribuído',
+    observacao: 'Observação',
+    instancia: 'Instância',
+    acesso: 'Acesso',
+    clientes: 'Clientes',
+    envolvidos: 'Envolvidos',
+    etiquetas: 'Etiquetas',
+  localizacao: 'Localização',
+novaLocalizacao: 'Localização'
+  };
+
+  return map[campo.toLowerCase()] || campo;
+} getMudancas(h: any): any[] {
+
+  if (!h?.dadosAntes)
+    return [];
+
+  try {
+
+    const dados = JSON.parse(h.dadosAntes);
+
+    return Array.isArray(dados)
+      ? dados
+      : [];
+
+  } catch {
+
+    return [];
+  }
+}
 }

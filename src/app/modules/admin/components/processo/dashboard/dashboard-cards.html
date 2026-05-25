@@ -1,0 +1,159 @@
+<div class="row">
+
+  <!-- TOTAL ATENDIMENTOS -->
+  <div class="col-12 col-sm-6 col-xxl-3 d-flex">
+
+    <div class="card flex-fill">
+
+      <div class="card-body py-4">
+
+        <div class="d-flex align-items-start">
+
+          <div class="flex-grow-1">
+
+            <h3 class="mb-2">
+              {{ totalAtendimentos }}
+            </h3>
+
+            <p class="mb-0 text-muted">
+              Total de Atendimentos
+            </p>
+
+          </div>
+
+          <div class="d-inline-block ms-3">
+
+            <div class="stat bg-primary">
+
+              <i class="align-middle text-white fas fa-comments"></i>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="col-12 col-sm-6 col-xxl-3 d-flex">
+
+    <div class="card flex-fill">
+
+      <div class="card-body py-4">
+
+        <div class="d-flex align-items-start">
+
+          <div class="flex-grow-1">
+
+            <h3 class="mb-2">
+              {{ totalClientes }}
+            </h3>
+
+            <p class="mb-0 text-muted">
+              Clientes Atendidos
+            </p>
+
+          </div>
+
+          <div class="d-inline-block ms-3">
+
+            <div class="stat bg-success">
+
+              <i class="align-middle text-white fas fa-users"></i>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MAIS ATIVO -->
+  <div class="col-12 col-sm-6 col-xxl-3 d-flex">
+
+    <div class="card flex-fill">
+
+      <div class="card-body py-4">
+
+        <div class="d-flex align-items-start">
+
+          <div class="flex-grow-1">
+
+            <h6 class="mb-2">
+              Cliente Mais Ativo
+            </h6>
+
+            <p class="mb-0 fw-bold">
+              {{ clienteMaisAtivo || 'Nenhum' }}
+            </p>
+
+          </div>
+
+          <div class="d-inline-block ms-3">
+
+            <div class="stat bg-warning">
+
+              <i class="align-middle text-white fas fa-star"></i>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ÚLTIMO -->
+  <div class="col-12 col-sm-6 col-xxl-3 d-flex">
+
+    <div class="card flex-fill">
+
+      <div class="card-body py-4">
+
+        <div class="d-flex align-items-start">
+
+          <div class="flex-grow-1">
+
+            <h6 class="mb-2">
+              Último Atendimento
+            </h6>
+
+            <p class="mb-0 fw-bold">
+              {{ ultimoAtendimento || '-' }}
+            </p>
+
+          </div>
+
+          <div class="d-inline-block ms-3">
+
+            <div class="stat bg-danger">
+
+              <i class="align-middle text-white fas fa-clock"></i>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

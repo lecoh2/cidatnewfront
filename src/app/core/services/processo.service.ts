@@ -8,7 +8,9 @@ import { Observable } from "rxjs";
 import { ApiResponse } from "../models/respostas/api-response";
 import { ProcessoAutoComplete } from "../models/processo/processo-auto-complete";
 import { ObterProcessoResponse } from "../models/processo/obter-processo-response";
-
+import { ProcessoUpdateRequest } from '../models/processo/processo-update-request';
+import { ProcessoLocalPadraoResponse } from "../models/processo/processo-local-padrao-response";
+import { AtendimentoPorCliente } from "../models/atendimento/atendimento-por-cliente";
 
 @Injectable({
   providedIn: 'root' // Isso registra o serviço automaticamente no app
@@ -48,24 +50,51 @@ export class ProcessoService {
     if (searchTerm) params.searchTerm = searchTerm;
     return this.http.get<any>(`${this.url}/api/v1/processo/consultar-processo-paginacao`, { params });
   }
-editarProcesso(id: string, request: any): Observable<any> {
+  editarProcesso(
+    id: string,
+    request: ProcessoUpdateRequest
+  ): Observable<any> {
+    const token = localStorage.getItem('token');
+
+    return this.http.put<any>(
+      `${this.url}/api/v1/processo/atualizar-processo/${id}`,
+      request,
+      {
+        headers: token
+          ? { Authorization: `Bearer ${token}` }
+          : {}
+      }
+    );
+  }
+  ObterProcessoPorId(id: string): Observable<ObterProcessoResponse> {
+    return this.http.get<ObterProcessoResponse>(
+      `${this.url}/api/v1/processo/obter-processo-por-id/${id}`
+
+
+    );
+  }
+  importarDistribuicao(file: FormData) {
+    return this.http.post(
+      `${this.url}/api/v1/processo/importar-distribuicao`,
+      file
+    );
+  }
+consultarLocais() {
+  return this.http.get<ProcessoLocalPadraoResponse[]>(
+    `${this.url}/api/v1/processo/localizacoes`
+  );
+}
+getResumoAtendimentos(processoId: string): Observable<AtendimentoPorCliente[]> {
   const token = localStorage.getItem('token');
 
-  return this.http.put<any>(
-    `${this.url}/api/v1/processo/atualizar-processo/${id}`,
-    request,
+  return this.http.get<AtendimentoPorCliente[]>(
+    `${this.url}/api/v1/atendimento/processo/${processoId}/atendimentos-resumo`,
+  
     {
       headers: token
         ? { Authorization: `Bearer ${token}` }
         : {}
     }
-  );
-}
-ObterProcessoPorId(id: string): Observable<ObterProcessoResponse> {
-  return this.http.get<ObterProcessoResponse>(
-    `${this.url}/api/v1/processo/obter-processo-por-id/${id}`
-
-    
   );
 }
 }

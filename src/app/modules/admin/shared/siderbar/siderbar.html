@@ -63,6 +63,8 @@
 						</a></li>
 					<li class="sidebar-item"><a class='sidebar-link' [routerLink]="['/admin', 'consultar-processo']">
 							Consultar</a></li>
+							<li class="sidebar-item"><a class='sidebar-link' [routerLink]="['/admin', 'detalhes-processo']">
+							Detelhes</a></li>
 				</ul>
 			</li>
 			<li class="sidebar-item" *ngIf="access.hasNivel('Administrador','Administração','Super Administrador', 'Coordenador',

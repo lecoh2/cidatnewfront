@@ -9,140 +9,88 @@
 
         <div class="card-body">
 
-            <!-- SPINNER -->
             <app-spinner *ngIf="carregando" [show]="true" message="Carregando..."></app-spinner>
 
-            <!-- ALERTAS -->
-            <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
+            <app-alerts *ngIf="!carregando && mensagemSucesso.length"
+                titulo="Sucesso!"
+                [mensagens]="mensagemSucesso"
                 tipo="success">
             </app-alerts>
 
-            <app-alerts *ngIf="!carregando && mensagemErro.length" titulo="Erro!" [mensagens]="mensagemErro"
+            <app-alerts *ngIf="!carregando && mensagemErro.length"
+                titulo="Erro!"
+                [mensagens]="mensagemErro"
                 tipo="danger">
             </app-alerts>
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-                <!-- ================= DADOS DO PROCESSO ================= -->
-                <h5 class="mb-3">Dados do Processo</h5>
-                <!-- ================= ETIQUETAS ================= -->
-<div class="d-flex justify-content-end mb-3">
+                <!-- ETIQUETAS -->
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button"
+                            class="btn btn-light bg-white border"
+                            (click)="abrirHistoricoProcesso(id)">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </button>
+                </div>
 
-  <button
-    type="button"
-    class="btn btn-light bg-white border"
-    (click)="abrirHistoricoProcesso(id)">
-
-    <i class="fas fa-history me-2"></i>
-    Histórico
-
-  </button>
-
-</div>
                 <div class="mb-3">
                     <label class="form-label">Etiquetas</label>
-                    <app-etiquetas [etiquetas]="tiposetiquetas" [(selecionadas)]="etiquetasSelecionadas">
+                    <app-etiquetas
+                        [etiquetas]="tiposetiquetas"
+                        [(selecionadas)]="etiquetasSelecionadas">
                     </app-etiquetas>
                 </div>
 
+                <!-- PROCESSO -->
                 <div class="row mb-3">
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <label class="form-label">Pasta</label>
                         <input class="form-control" formControlName="pasta">
                     </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Número do Processo</label>
+                        <input class="form-control"
+                               formControlName="numeroProcesso"
+                               mask="000/000000/0000">
+                    </div>
                 </div>
 
-                <!-- ================= PESSOAS ================= -->
+                <!-- PESSOAS -->
                 <div class="row mb-3">
 
                     <div class="col-md-6">
-                        <app-autocomplete-pessoa label="Clientes" placeholder="Digite o nome do cliente"
-                            [resultados]="pessoasFiltradas" [(selecionadas)]="pessoasSelecionadas"
-                            [qualificacoes]="qualificacoes" (buscar)="buscarPessoas($event)">
+                        <app-autocomplete-pessoa
+                            label="Clientes"
+                            placeholder="Digite o nome do cliente"
+                            [resultados]="pessoasFiltradas"
+                            [(selecionadas)]="pessoasSelecionadas"
+                            [qualificacoes]="qualificacoes"
+                            (buscar)="buscarPessoas($event)">
                         </app-autocomplete-pessoa>
                     </div>
 
                     <div class="col-md-6">
-                        <app-autocomplete-pessoa label="Outros envolvidos" placeholder="Digite o nome do envolvido"
-                            [resultados]="envolvidosFiltradas" [(selecionadas)]="envolvidosSelecionados"
-                            [qualificacoes]="qualificacoes" (buscar)="buscarEnvolvidos($event)">
+                        <app-autocomplete-pessoa
+                            label="Outros envolvidos"
+                            placeholder="Digite o nome do envolvido"
+                            [resultados]="envolvidosFiltradas"
+                            [(selecionadas)]="envolvidosSelecionados"
+                            [qualificacoes]="qualificacoes"
+                            (buscar)="buscarEnvolvidos($event)">
                         </app-autocomplete-pessoa>
                     </div>
 
                 </div>
 
+                <!-- DADOS -->
                 <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label">Título</label>
+                    <div class="col-md-6">
+                        <label class="form-label">Assunto</label>
                         <input class="form-control" formControlName="titulo">
                     </div>
-                </div>
-
-
-                <!-- ================= INSTÂNCIA / PROCESSO ================= -->
-                <div class="row mb-3">
-
-                    <div class="col-md-4">
-                        <label class="form-label">Instância</label>
-                        <select class="form-control" formControlName="instancia">
-                            <option [ngValue]="null">Selecione</option>
-                            <option [ngValue]="instanciaEnum.PrimeiroGrau">1º Grau</option>
-                            <option [ngValue]="instanciaEnum.SegundoGrau">2º Grau</option>
-                            <option [ngValue]="instanciaEnum.Superior">Superior</option>
-                            <option [ngValue]="instanciaEnum.Supremo">Supremo</option>
-                            <option [ngValue]="instanciaEnum.Outros">Outros</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-8">
-                        <label class="form-label">Número do Processo</label>
-                        <input class="form-control" formControlName="numeroProcesso" mask="0000000-00.0000.0.00.0000">
-                    </div>
-
-                </div>
-
-                <!-- ================= SELEÇÕES ================= -->
-                <div class="row mb-3">
-
-
-
-                    <div class="col-md-3">
-                        <label class="form-label">Foro</label>
-                        <select class="form-control" formControlName="foroId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let foro of foros" [ngValue]="foro.id">
-                                {{ foro.nome }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Vara *</label>
-                        <select class="form-control" formControlName="varaId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let vara of varasFiltradas" [ngValue]="vara.id">
-                                {{ vara.nomeVara }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Ação</label>
-                        <select class="form-control" formControlName="acaoId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let acao of acoes" [ngValue]="acao.idAcao">
-                                {{ acao.nomeAcao }}
-                            </option>
-                        </select>
-                    </div>
-                    <!---->
-                    <div class="col-md-3">
-                        <label class="form-label">Juízo</label>
-                        <p> {{ juizoFormatado }}</p>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
 
                     <div class="col-md-6">
                         <label class="form-label">Responsável</label>
@@ -153,179 +101,224 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Link do Tribunal</label>
-                        <input class="form-control" formControlName="linkTribunal">
-                    </div>
                 </div>
 
-                <!-- ================= DETALHES ================= -->
-
-
-
-
-                <!-- ================= VALORES ================= -->
-                <h5 class="mt-4 mb-3">Valores e Datas</h5>
-
-                <div class="row mb-3">
-
-                    <div class="col-md-4">
-                        <label class="form-label">Valor da Causa</label>
-                        <input type="number" class="form-control" formControlName="valorCausa">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Valor da Condenação</label>
-                        <input type="number" class="form-control" formControlName="valorCondenacao">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Data de Distribuição</label>
-                        <input type="date" class="form-control" formControlName="distribuido">
-                    </div>
-
-                </div>
+                <!-- ================= LOCALIZAÇÃO (CORRIGIDO) ================= -->
                 <div class="row mb-3">
 
                     <div class="col-md-6">
-                        <label class="form-label">Objeto</label>
-                        <textarea class="form-control" rows="3" formControlName="objeto"></textarea>
+                        <label class="form-label">Localização Atual</label>
+
+                        <!-- MOSTRA ATUAL DO PROCESSO -->
+                        <div class="mb-2 text-muted small">
+                            Atual:
+                            <strong>
+                                {{
+                                    form.value.novaLocalizacao || 'Não definida'
+                                }}
+                            </strong>
+                        </div>
+
+                        <select class="form-select" formControlName="novaLocalizacao">
+                            <option [ngValue]="null">Selecione</option>
+
+                            <!-- CORRETO: usa "local" -->
+                            <option *ngFor="let l of locais" [ngValue]="l.local">
+                                {{ l.local }}
+                            </option>
+
+                        </select>
+                        <div class="mt-3" *ngIf="localizacoesProcesso?.length">
+
+    <label class="form-label">Histórico de Localizações</label>
+
+    <ul class="list-group">
+
+        <li class="list-group-item"
+            *ngFor="let l of localizacoesProcesso">
+
+            <div class="d-flex justify-content-between">
+
+                <div>
+                    <strong>{{ l.local }}</strong>
+
+                    <div class="text-muted small">
+                        {{ l.observacao || 'Sem observação' }}
                     </div>
-                    <div class="col-md-6">
+                </div>
+
+                <div class="text-end">
+
+                    <span *ngIf="l.atual" class="badge bg-success">
+                        Atual
+                    </span>
+
+                    <div class="small text-muted">
+                        {{ l.dataSaida ? (l.dataSaida | date:'dd/MM/yyyy') : 'Em andamento' }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </li>
+
+    </ul>
+
+</div>
+                    </div>
+
+                </div>
+
+                <!-- TIPO PROCESSO -->
+                <div class="row mb-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo do Processo</label>
+
+                        <select class="form-select" formControlName="tipoProcesso">
+                            <option [ngValue]="null">Selecione</option>
+                            <option [ngValue]="1">URGENTE</option>
+                            <option [ngValue]="2">PEDIDO</option>
+                            <option [ngValue]="3">RETORNO DO GABINETE</option>
+                            <option [ngValue]="4">RETORNO CORREÇÃO</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-9">
                         <label class="form-label">Observação</label>
-                        <textarea class="form-control" rows="3" formControlName="observacao"></textarea>
+                        <input class="form-control"
+                               formControlName="observacao"
+                               maxlength="20">
                     </div>
+
                 </div>
-                <!-- ================= ACESSO ================= -->
+
+                <!-- ACESSO -->
                 <div class="col-md-3">
                     <label class="form-label">Acesso</label>
 
                     <div class="d-flex gap-4">
 
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" formControlName="acesso"
-                                [value]="acessoEnum.Publico">
-                            <label class="form-check-label">Público</label>
+                            <input class="form-check-input"
+                                   type="radio"
+                                   formControlName="acesso"
+                                   [value]="acessoEnum.Publico">
+                            <label>Público</label>
                         </div>
 
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" formControlName="acesso"
-                                [value]="acessoEnum.Privado">
-                            <label class="form-check-label">Privado</label>
+                            <input class="form-check-input"
+                                   type="radio"
+                                   formControlName="acesso"
+                                   [value]="acessoEnum.Privado">
+                            <label>Privado</label>
                         </div>
 
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" formControlName="acesso"
-                                [value]="acessoEnum.Envolvidos">
-                            <label class="form-check-label">Envolvidos</label>
+                            <input class="form-check-input"
+                                   type="radio"
+                                   formControlName="acesso"
+                                   [value]="acessoEnum.Envolvidos">
+                            <label>Envolvidos</label>
                         </div>
 
                     </div>
                 </div>
 
-                <!-- BOTÃO -->
-                <button type="button" class="btn btn-secondary mt-3 me-2" (click)="irParaLista()">
-                    <i class="fas fa-arrow-left"></i> Voltar
+                <!-- BOTÕES -->
+                <button type="button"
+                        class="btn btn-secondary mt-3 me-2"
+                        (click)="irParaLista()">
+                    Voltar
                 </button>
 
-                <!-- BOTÃO -->
-                <button type="submit" class="btn btn-primary mt-3" [disabled]="carregando">
-                    <i class="fas fa-save"></i> Atualizar Processo
+                <button type="submit"
+                        class="btn btn-primary mt-3"
+                        [disabled]="carregando">
+                    Atualizar Processo
                 </button>
 
             </form>
 
         </div>
     </div>
-<div
-  #modalHistorico
-  class="modal fade"
-  tabindex="-1"
-  aria-hidden="true"
-  data-bs-backdrop="static"
-  data-bs-keyboard="false">
+  <div #modalHistorico class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
 
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
-    <div class="modal-content">
+      <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">
-          Histórico do Processo
-        </h5>
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Histórico do Tarefas
+          </h5>
 
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal">
-        </button>
-      </div>
-
-      <div class="modal-body">
-
-        <!-- LOADING -->
-      <div *ngIf="carregandoHistorico">
-          Carregando histórico...
+          <button type="button" class="btn-close" data-bs-dismiss="modal">
+          </button>
         </div>
 
-        <!-- HISTÓRICO -->
-        <ul
-          class="timeline"
-          >
+        <div class="modal-body">
 
-          <li
-  *ngFor="let h of historico"
-  class="timeline-item pb-4 mb-4 border-bottom">
+          <!-- LOADING -->
+          <div *ngIf="carregandoHistorico">
+            Carregando histórico...
+          </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+          <!-- HISTÓRICO -->
+          <ul class="timeline">
 
-              <strong>
-                {{ h.observacao || 'Atualização' }}
-              </strong>
+            <li *ngFor="let h of historico" class="timeline-item pb-4 mb-4 border-bottom">
 
-              <small class="text-muted">
-                {{ h.usuarioNome || 'Sistema' }}
-              </small>
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
 
-              <span class="text-muted small">
-                {{ h.dataAlteracao | date:'dd/MM/yyyy HH:mm' }}
-              </span>
+                <strong>
+                  {{ h.observacao || 'Atualização' }}
+                </strong>
 
-            </div>
+                <small class="text-muted">
+                  Usuario que fez a alteração: <strong>{{ h.usuarioNome || 'Sistema' }}</strong>
+                </small>
 
-<div
-  *ngFor="let m of getMudancas(h)"
-  class="mb-2">
-
-              <strong>
-                {{ formatarCampo(m.campo) }}
-              </strong>
-
-              <div>
-
-                <span class="text-danger text-decoration-line-through">
-                  {{ formatarValor(m.antes, m.campo) }}
-                </span>
-
-                <i class="fas fa-arrow-right mx-2"></i>
-
-                <span class="text-success">
-                  {{ formatarValor(m.depois, m.campo) }}
+                <span class="text-muted small">
+                  Data da altereçao: <strong>{{ h.dataAlteracao | date:'dd/MM/yyyy HH:mm' }}</strong>
                 </span>
 
               </div>
 
-            </div>
+    <div *ngFor="let m of getMudancas(h)" class="mb-2">
 
-          </li>
+  <strong>
+    {{ formatarCampo(m.Campo) }}
+  </strong>
 
-        </ul>
+  <div>
+
+    <span class="text-danger text-decoration-line-through">
+      {{ m.Antes }}
+    </span>
+
+    <i class="fas fa-arrow-right mx-2"></i>
+
+    <span class="text-success">
+      {{ m.Depois }}
+    </span>
+
+  </div>
+
+</div>
+
+            </li>
+
+          </ul>
+
+        </div>
 
       </div>
 
     </div>
 
   </div>
-
-</div>
 </div>

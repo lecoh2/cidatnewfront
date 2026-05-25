@@ -32,102 +32,46 @@
                 </div>
                 <!-- ================= DADOS DO PROCESSO ================= -->
                 <h5 class="mb-3">Dados do Processo</h5>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        Quantidade de Atendimentos
+                    </label>
 
+
+                </div>
                 <div class="row mb-3">
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                         <label class="form-label">Pasta</label>
                         <input class="form-control" formControlName="pasta">
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Número do Processo</label>
+                        <input class="form-control" formControlName="numeroProcesso" mask="000/000000/0000">
+                    </div>
                 </div>
+
                 <div class="row mb-3">
+                    <!-- CLIENTES -->
+                    <div class="col-md-6">
+                        <app-autocomplete-pessoa label="Clientes" placeholder="Digite o nome do cliente"
+                            [resultados]="pessoasFiltradas" [(selecionadas)]="pessoasSelecionadas"
+                            [qualificacoes]="qualificacoes" (buscar)="buscarPessoas($event)">
+                        </app-autocomplete-pessoa>
+                    </div>
 
-                    <!-- ================= PESSOAS ================= -->
-
-
-                    <div class="row mb-3">
-
-                        <!-- CLIENTES -->
-                        <div class="col-md-6">
-                            <app-autocomplete-pessoa label="Clientes" placeholder="Digite o nome do cliente"
-                                [resultados]="pessoasFiltradas" [(selecionadas)]="pessoasSelecionadas"
-                                [qualificacoes]="qualificacoes" (buscar)="buscarPessoas($event)">
-                            </app-autocomplete-pessoa>
-                        </div>
-
-                        <!-- ENVOLVIDOS -->
-                        <div class="col-md-6">
-                            <app-autocomplete-pessoa label="Outros envolvidos" placeholder="Digite o nome do envolvido"
-                                [resultados]="envolvidosFiltradas" [(selecionadas)]="envolvidosSelecionados"
-                                [qualificacoes]="qualificacoes" (buscar)="buscarEnvolvidos($event)">
-                            </app-autocomplete-pessoa>
-                        </div>
-
+                    <!-- ENVOLVIDOS -->
+                    <div class="col-md-6">
+                        <app-autocomplete-pessoa label="Outros" placeholder="Digite o nome do envolvido"
+                            [resultados]="envolvidosFiltradas" [(selecionadas)]="envolvidosSelecionados"
+                            [qualificacoes]="qualificacoes" (buscar)="buscarEnvolvidos($event)">
+                        </app-autocomplete-pessoa>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label">Título</label>
+                    <div class="col-md-6">
+                        <label class="form-label">Assunto</label>
                         <input class="form-control" formControlName="titulo">
                     </div>
-
-
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Instância</label>
-                        <select class="form-control" formControlName="instancia">
-                            <option [ngValue]="null">Selecione</option>
-
-                            <option [ngValue]="instanciaEnum.PrimeiroGrau">1º Grau</option>
-                            <option [ngValue]="instanciaEnum.SegundoGrau">2º Grau</option>
-                            <option [ngValue]="instanciaEnum.Superior">Superior</option>
-                            <option [ngValue]="instanciaEnum.Supremo">Supremo</option>
-                            <option [ngValue]="instanciaEnum.Outros">Outros</option>
-                        </select>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Número do Processo</label>
-                        <input class="form-control" formControlName="numeroProcesso" mask="0000000-00.0000.0.00.0000">
-                    </div>
-                </div>
-                <!-- ================= SELEÇÕES ================= -->
-                <div class="row mb-3">
-
-                    <div class="col-md-3">
-                        <label class="form-label">Foro</label>
-                        <select class="form-control" formControlName="foroId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let foro of foros" [ngValue]="foro.id">
-                                {{ foro.nome }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Vara *</label>
-                        <select class="form-control" formControlName="varaId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let vara of varasFiltradas" [ngValue]="vara.id">
-                                {{ vara.nomeVara }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Ação</label>
-                        <select class="form-control" formControlName="acaoId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let acao of acoes" [ngValue]="acao.idAcao">
-                                {{ acao.nomeAcao }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Juízo</label>
-                        <p> {{ juizoFormatado }}</p>
-                    </div>
-                </div>
-                <div class="row mb-3">
 
                     <div class="col-md-6">
                         <label class="form-label">Responsável</label>
@@ -138,49 +82,61 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Link do Tribunal</label>
-                        <input class="form-control" formControlName="linkTribunal">
-                    </div>
                 </div>
-
-
-                <!-- ================= DETALHES ================= -->
-
-
-
-
-                <!-- ================= VALORES ================= -->
-                <h5 class="mt-4 mb-3">Valores e Datas</h5>
 
                 <div class="row mb-3">
 
-                    <div class="col-md-4">
-                        <label class="form-label">Valor da Causa</label>
-                        <input type="number" class="form-control" formControlName="valorCausa">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Valor da Condenação</label>
-                        <input type="number" class="form-control" formControlName="valorCondenacao">
-                    </div>
-
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Data de Distribuição</label>
                         <input type="date" class="form-control" formControlName="distribuido">
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo do Processo</label>
+
+                        <select class="form-select" formControlName="tipoProcesso">
+
+                            <option [ngValue]="null">Selecione</option>
+
+                            <option [ngValue]="1">URGENTE</option>
+                            <option [ngValue]="2">PEDIDO</option>
+                            <option [ngValue]="3">RETORNO DO GABINETE</option>
+                            <option [ngValue]="4">RETORNO CORREÇÃO</option>
+                        </select>
+                    </div>              
+              
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Localização Inicial
+                        </label>
+
+                        <select class="form-select" formControlName="localizacaoInicialId">
+
+                            <option [ngValue]="null">
+                                Selecione
+                            </option>
+
+                            <option *ngFor="let l of locais" [ngValue]="l.id">
+
+                                {{ l.local }}
+
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Observação (máximo 20 caracteres)</label>
+
+                        <textarea class="form-control" rows="3" formControlName="observacao" maxlength="20">
+                        </textarea>
+
+                    </div>
 
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Objeto</label>
-                        <textarea class="form-control" rows="3" formControlName="objeto"></textarea>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Observação</label>
-                        <textarea class="form-control" rows="3" formControlName="observacao"></textarea>
-                    </div>
-                </div>
+
                 <div class="col-md-6">
                     <label class="form-label">Acesso</label>
 

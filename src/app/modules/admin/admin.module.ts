@@ -42,6 +42,15 @@ import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 import { Perfil } from "./components/usuario/perfil/perfil";
 import { EditarUsuario } from "./components/usuario/editar-usuario/editar-usuario";
 import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consultar-usuarios";
+import { ImportarProcessoExcel } from "./components/processo/importar/importar-processo-excel";
+import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
+import { DashboardCards } from "./components/processo/dashboard/dashboard-cards";
+import { DashboardAtendimentos } from "./components/processo/dashboard/dashboard-atendimentos";
+import { DashboardGrafico } from "./components/processo/dashboard/dashboard-grafico";
+import { DashboardHistorico } from "./components/processo/dashboard/dashboard-historico";
+import { DashboardClientes } from "./components/processo/dashboard/dashboard-clientes";
+import { DashboardLocalizacoes } from "./components/processo/dashboard/dashboard-localizacoes";
+import { DashboardTimeline } from "./components/processo/dashboard/dashboard-timeline";
 
 
 
@@ -59,6 +68,8 @@ import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consu
         CadastrarProcesso,
         ConsultarProcesso,
         EditarProcesso,
+        DetalhesProcesso,
+        ImportarProcessoExcel,
         CadastrarAtendimento,
         ConsultarAtendimento,
         EditarAtendimento,
@@ -85,6 +96,14 @@ import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consu
         AutocompleteListaTarefas,
         CadastrarResponsaveis,
         Vinculo,
+        DashboardCards,
+        DashboardAtendimentos,
+        DashboardGrafico,
+        DashboardHistorico,
+        DashboardClientes,
+        DashboardLocalizacoes,
+        DashboardTimeline,
+      
 
         //siderbar, navbar, footer
         Siderbar,

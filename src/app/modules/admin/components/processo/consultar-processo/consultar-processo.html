@@ -92,16 +92,29 @@
                                 <td>{{ item.titulo }}</td>
 
                                 <!-- ⚙️ AÇÕES -->
-                                <td class="text-end align-middle">
+     <td class="text-end align-middle">
 
-                                    <a [routerLink]="['/admin/editar-processo', item.id]"
-                                       title="Editar">
+  <!-- EDITAR -->
+  <a
+    [routerLink]="['/admin/editar-processo', item.id]"
+    class="text-primary me-3"
+    title="Editar processo">
 
-                                        <i class="fas fa-pencil-alt fa-lg"></i>
+    <i class="fas fa-pencil fa-lg"></i>
 
-                                    </a>
+  </a>
 
-                                </td>
+  <!-- DETALHES -->
+  <a
+    [routerLink]="['/admin/detalhes-processo', item.id]"
+    class="text-success"
+    title="Ver detalhes">
+
+    <i class="fas fa-eye fa-lg"></i>
+
+  </a>
+
+</td>
 
                             </tr>
 
