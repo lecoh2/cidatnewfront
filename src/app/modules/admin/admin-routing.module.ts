@@ -33,6 +33,8 @@ import { EditarUsuario } from "./components/usuario/editar-usuario/editar-usuari
 import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consultar-usuarios";
 import { ImportarProcessoExcel } from "./components/processo/importar/importar-processo-excel";
 import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
+
+import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbord-relatorio-mensal";
 //import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 
 
@@ -211,9 +213,17 @@ export const routes: Routes = [
                 component: ConsultarUsuarios,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador'] } // quem pode acessar
-            }, {
+            },
+             {
                 path: 'editar-usuario/:id',
                 component: EditarUsuario,
+                canActivate: [AuthGuard, NivelGuard],
+                data: { niveis: ['Super Administrador', 'Administrador'] } // quem pode acessar
+            },
+            
+            {
+                path: 'dashboard-relatorio-mensal',
+                component: DashboardRelatorioMensal,
                 canActivate: [AuthGuard, NivelGuard],
                 data: { niveis: ['Super Administrador', 'Administrador'] } // quem pode acessar
             },

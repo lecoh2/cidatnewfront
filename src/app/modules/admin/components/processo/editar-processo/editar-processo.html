@@ -46,7 +46,7 @@
                 <!-- PROCESSO -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Pasta</label>
+                        <label class="form-label">Nome</label>
                         <input class="form-control" formControlName="pasta">
                     </div>
 
@@ -63,8 +63,8 @@
 
                     <div class="col-md-6">
                         <app-autocomplete-pessoa
-                            label="Clientes"
-                            placeholder="Digite o nome do cliente"
+                            label="Contribuinte"
+                            placeholder="Digite o nome do Contribuinte"
                             [resultados]="pessoasFiltradas"
                             [(selecionadas)]="pessoasSelecionadas"
                             [qualificacoes]="qualificacoes"
@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Responsável</label>
+                        <label class="form-label">Estágiario</label>
                         <select class="form-control" formControlName="usuarioResponsavelId">
                             <option [ngValue]="null">Selecione</option>
                             <option *ngFor="let user of responsaveis" [ngValue]="user.id">
@@ -186,10 +186,10 @@
                     </div>
 
                     <div class="col-md-9">
-                        <label class="form-label">Observação</label>
+                        <label class="form-label">Observação: lEMBRAR DE COLOCAR A MENSAGEM</label>
                         <input class="form-control"
                                formControlName="observacao"
-                               maxlength="20">
+                               minlength="20">
                     </div>
 
                 </div>

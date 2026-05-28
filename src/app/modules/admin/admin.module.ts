@@ -52,6 +52,8 @@ import { DashboardClientes } from "./components/processo/dashboard/dashboard-cli
 import { DashboardLocalizacoes } from "./components/processo/dashboard/dashboard-localizacoes";
 import { DashboardTimeline } from "./components/processo/dashboard/dashboard-timeline";
 
+import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbord-relatorio-mensal";
+
 
 
 
@@ -103,6 +105,7 @@ import { DashboardTimeline } from "./components/processo/dashboard/dashboard-tim
         DashboardClientes,
         DashboardLocalizacoes,
         DashboardTimeline,
+        DashboardRelatorioMensal,
       
 
         //siderbar, navbar, footer
