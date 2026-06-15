@@ -35,7 +35,7 @@ export interface EstagiarioRelatorio {
 }
 
 export interface ProcessoPorUsuario {
-
+ usuarioId: string;
   usuario: string;
 
   quantidadeProcessos: number;

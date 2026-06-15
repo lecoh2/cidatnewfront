@@ -1,3 +1,4 @@
+declare var bootstrap: any;
 import {
   Component,
   OnInit,
@@ -17,12 +18,14 @@ import {
   ChartConfiguration,
   ChartOptions
 } from 'chart.js';
+import { ProcessoService } from '../../../../../core/services/processo.service';
 @Component({
   selector: 'app-relatorio-mensal',
   standalone: false,
   templateUrl: './dashbord-relatorio-mensal.html',
   styleUrl: './dashbord-relatorio-mensal.css'
 })
+
 export class DashboardRelatorioMensal
 implements OnInit {
 
@@ -31,7 +34,8 @@ implements OnInit {
   // =========================
   private relatorioService =
     inject(RelatorioService);
-
+private processoService =
+  inject(ProcessoService);
   // =========================
   // ESTADO
   // =========================
@@ -40,7 +44,17 @@ implements OnInit {
   mensagemErro: string[] = [];
 
   relatorio?: RelatorioMensalResponse;
+processosUsuario: any[] = [];
 
+totalRegistros = 0;
+paginaAtual = 1;
+tamanhoPagina = 10;
+totalPaginas = 1;
+paginasVisiveis: number[] = [];
+
+usuarioSelecionadoId = '';
+
+filtroProcesso = '';
   mes = new Date().getMonth() + 1;
 
   ano = new Date().getFullYear();
@@ -57,7 +71,132 @@ barChartOptions: ChartOptions<'bar'> = {
     this.carregarRelatorio();
 
   }
+abrirProcessosUsuario(usuarioId: string): void {
 
+  console.log('Usuário clicado:', usuarioId);
+
+  this.usuarioSelecionadoId = usuarioId;
+
+  this.processoService
+    .consultarProcessosUsuario(
+      usuarioId,
+      this.paginaAtual,
+      this.tamanhoPagina,
+      this.filtroProcesso
+    )
+    .subscribe({
+
+      next: (response: any) => {
+
+        console.log('Retorno API:', response);
+
+        this.processosUsuario = response.items || [];
+
+        this.totalRegistros = response.totalCount || 0;
+
+        this.totalPaginas = Math.ceil(
+          this.totalRegistros / this.tamanhoPagina
+        );
+
+        this.atualizarPaginasVisiveis();
+
+        // ABRIR MODAL
+        const modalElement =
+          document.getElementById('modalProcessos');
+
+        if (modalElement) {
+
+          const modal =
+            new bootstrap.Modal(modalElement);
+
+          modal.show();
+
+        }
+
+      },
+
+      error: (err) => {
+
+        console.error(err);
+
+      }
+
+    });
+
+}
+carregarProcessosUsuario() {
+
+  this.processoService
+    .consultarProcessosUsuario(
+      this.usuarioSelecionadoId,
+      this.paginaAtual,
+      this.tamanhoPagina,
+      this.filtroProcesso
+    )
+    .subscribe({
+
+      next: (response: any) => {
+
+        this.processosUsuario =
+          response.items || [];
+
+        this.totalRegistros =
+          response.totalCount || 0;
+
+        this.totalPaginas =
+          Math.ceil(
+            this.totalRegistros /
+            this.tamanhoPagina
+          );
+
+        this.atualizarPaginasVisiveis();
+
+      }
+
+    });
+
+}aplicarFiltroProcesso() {
+
+  this.paginaAtual = 1;
+
+  this.carregarProcessosUsuario();
+
+}irParaPagina(p: number) {
+
+  if (
+    p < 1 ||
+    p > this.totalPaginas
+  ) return;
+
+  this.paginaAtual = p;
+
+  this.carregarProcessosUsuario();
+
+}atualizarPaginasVisiveis() {
+
+  const maxVisiveis = 5;
+
+  let start = Math.max(
+    1,
+    this.paginaAtual - 2
+  );
+
+  let end = Math.min(
+    this.totalPaginas,
+    start + maxVisiveis - 1
+  );
+
+  start = Math.max(
+    1,
+    end - maxVisiveis + 1
+  );
+
+  this.paginasVisiveis = Array.from(
+    { length: end - start + 1 },
+    (_, i) => start + i
+  );
+
+}
   // =========================
   // CARREGAR RELATÓRIO
   // =========================

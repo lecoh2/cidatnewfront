@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment.development';
 import { RelatorioMensalResponse } from '../models/usuario/relatorio-mensal-response';
+import { ProcessoUsuarioDetalheResponse } from '../models/usuario/processo-usuario-detalhe-response';
 
 
 
@@ -33,4 +34,7 @@ export class RelatorioService {
       `${this.url}/api/v1/processo/relatorio-mensal/${mes}/${ano}`
     );
   }
+
+
+
 }

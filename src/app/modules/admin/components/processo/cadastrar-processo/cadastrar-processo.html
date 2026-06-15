@@ -13,13 +13,17 @@
             <app-spinner *ngIf="carregando" [show]="true" message="Salvando..."></app-spinner>
 
             <!-- ALERTAS -->
-            <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
-                tipo="success">
+     <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
+                tipo="success" icone="fas fa-check-circle">
             </app-alerts>
 
-            <app-alerts *ngIf="!carregando && mensagemErro.length" titulo="Erro!" [mensagens]="mensagemErro"
-                tipo="danger">
-            </app-alerts>
+                   <app-alerts
+  *ngIf="!carregando && mensagemErro.length"
+  titulo="Erro!"
+  [mensagens]="mensagemErro"
+  tipo="danger"
+  icone="fas fa-times-circle">
+</app-alerts>
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()">
                 <!-- ================= ETIQUETAS ================= -->

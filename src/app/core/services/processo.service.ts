@@ -12,6 +12,7 @@ import { ProcessoUpdateRequest } from '../models/processo/processo-update-reques
 import { ProcessoLocalPadraoResponse } from "../models/processo/processo-local-padrao-response";
 import { AtendimentoPorCliente } from "../models/atendimento/atendimento-por-cliente";
 
+
 @Injectable({
   providedIn: 'root' // Isso registra o serviço automaticamente no app
 })
@@ -96,5 +97,28 @@ getResumoAtendimentos(processoId: string): Observable<AtendimentoPorCliente[]> {
         : {}
     }
   );
+}
+consultarProcessosUsuario(
+  usuarioId: string,
+  pageNumber: number,
+  pageSize: number,
+  searchTerm?: string
+) {
+
+  const params: any = {
+    usuarioId,
+    pageNumber: pageNumber.toString(),
+    pageSize: pageSize.toString()
+  };
+
+  if (searchTerm) {
+    params.searchTerm = searchTerm;
+  }
+
+  return this.http.get<any>(
+    `${this.url}/api/v1/processo/consultar-processos-usuario`,
+    { params }
+  );
+
 }
 }
