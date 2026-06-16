@@ -63,8 +63,7 @@
 						</a></li>
 					<li class="sidebar-item"><a class='sidebar-link' [routerLink]="['/admin', 'consultar-processo']">
 							Consultar</a></li>
-							<li class="sidebar-item"><a class='sidebar-link' [routerLink]="['/admin', 'detalhes-processo']">
-							Detelhes</a></li>
+							
 				</ul>
 			</li>
 			<li class="sidebar-item" *ngIf="access.hasNivel('Administrador','Administração','Super Administrador', 'Coordenador',
@@ -99,6 +98,7 @@
 							Consultar</a></li>
 				</ul>
 			</li>
+			<!--
 			<li class="sidebar-item" *ngIf="access.hasNivel('Administrador','Administração','Super Administrador', 'Coordenador',
 	'Estagiários', 'Supervisor','Conciliador')">
 				<a data-bs-target="#evento" data-bs-toggle="collapse" class="sidebar-link collapsed">
@@ -115,9 +115,9 @@
 							Consultar</a></li>
 						
 				</ul>
-			</li>
+			</li>-->
 
-			<li class="sidebar-item" *ngIf="access.hasNivel('Administrador','Administração','Super Administrador', 'Coordenador',
+			<!--<li class="sidebar-item" *ngIf="access.hasNivel('Administrador','Administração','Super Administrador', 'Coordenador',
 	'Estagiários', 'Supervisor','Conciliador')">
 				<a data-bs-target="#caso" data-bs-toggle="collapse" class="sidebar-link collapsed">
 
@@ -132,7 +132,7 @@
 					<li class="sidebar-item"><a class='sidebar-link' [routerLink]="['/admin', 'consultar-caso']">
 							Consultar</a></li>
 				</ul>
-			</li>
+			</li>-->
 
 			<!-- Múltiplos níveis -->
 

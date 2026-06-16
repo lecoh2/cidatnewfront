@@ -44,11 +44,7 @@
                 </div>
 
                 <!-- PROCESSO -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Nome</label>
-                        <input class="form-control" formControlName="pasta">
-                    </div>
+                <div class="row mb-3">               
 
                     <div class="col-md-6">
                         <label class="form-label">Número do Processo</label>
@@ -62,25 +58,23 @@
                 <div class="row mb-3">
 
                     <div class="col-md-6">
-                        <app-autocomplete-pessoa
-                            label="Contribuinte"
-                            placeholder="Digite o nome do Contribuinte"
-                            [resultados]="pessoasFiltradas"
-                            [(selecionadas)]="pessoasSelecionadas"
-                            [qualificacoes]="qualificacoes"
-                            (buscar)="buscarPessoas($event)">
-                        </app-autocomplete-pessoa>
+                       <app-autocomplete-pessoa
+    label="Clientes"
+    placeholder="Digite o nome do cliente"
+    [resultados]="pessoasFiltradas"
+    [(selecionadas)]="pessoasSelecionadas"
+    (buscar)="buscarPessoas($event)">
+</app-autocomplete-pessoa>
                     </div>
 
                     <div class="col-md-6">
-                        <app-autocomplete-pessoa
-                            label="Outros envolvidos"
-                            placeholder="Digite o nome do envolvido"
-                            [resultados]="envolvidosFiltradas"
-                            [(selecionadas)]="envolvidosSelecionados"
-                            [qualificacoes]="qualificacoes"
-                            (buscar)="buscarEnvolvidos($event)">
-                        </app-autocomplete-pessoa>
+                       <app-autocomplete-pessoa
+    label="Outros"
+    placeholder="Digite o nome do envolvido"
+    [resultados]="envolvidosFiltradas"
+    [(selecionadas)]="envolvidosSelecionados"
+    (buscar)="buscarEnvolvidos($event)">
+</app-autocomplete-pessoa>
                     </div>
 
                 </div>

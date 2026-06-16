@@ -15,7 +15,7 @@ import { VaraService } from "../../../../../core/services/vara.service";
 import { UsuarioService } from "../../../../../core/services/usuario.service";
 import { AcaoService } from "../../../../../core/services/acao.service";
 import { PessoaService } from "../../../../../core/services/pessoa.service";
-import { QualificacoesService } from "../../../../../core/services/qualificacoes.service";
+
 import { EtiquetaService } from "../../../../../core/services/etiqueta.service";
 import { inject, OnInit } from "@angular/core";
 import { InstanciaEnum } from "../../../../../core/models/enums/intancia/instanciaEnum";
@@ -25,7 +25,7 @@ import { forkJoin, catchError, of } from 'rxjs';
 import { ConsultarVaraResponse } from '../../../../../core/models/vara/consultar-vara-response';
 import { ConsultarAcaoResponse } from '../../../../../core/models/acao/consultar-acao-response';
 import { ConsultarUsuarioResponse } from '../../../../../core/models/usuario/consultar-usuarios.response';
-import { QualificacaoResponse } from '../../../../../core/models/qualificacao/qualificacao-response';
+
 import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
 import { PessoaSelecionada } from '../../../../../core/models/pessoa/pessoa-selecionada';
 import { PessoaResumo } from '../../../../../core/models/pessoa/pessoa-resumo';
@@ -55,7 +55,7 @@ export class EditarProcesso implements OnInit {
   private acaoService = inject(AcaoService);
   private usuarioService = inject(UsuarioService);
   private pessoaService = inject(PessoaService);
-  private qualificacaoService = inject(QualificacoesService);
+
   private etiquetaService = inject(EtiquetaService);
   private historicoService = inject(HistoricoService);
   private cdr = inject(ChangeDetectorRef);
@@ -67,15 +67,10 @@ export class EditarProcesso implements OnInit {
   mensagemErro: string[] = [];
   mensagemSucesso: string[] = [];
 
-  foros: { id: string, nome: string }[] = [];
 
-  varas: ConsultarVaraResponse[] = [];
-  varasFiltradas: ConsultarVaraResponse[] = [];
-
-  acoes: ConsultarAcaoResponse[] = [];
 
   responsaveis: ConsultarUsuarioResponse[] = [];
-  qualificacoes: QualificacaoResponse[] = [];
+
 
   tiposetiquetas: ConsultarEtiquetaResponse[] = [];
   etiquetasSelecionadas: ConsultarEtiquetaResponse[] = [];
@@ -90,25 +85,23 @@ export class EditarProcesso implements OnInit {
   instanciaEnum = InstanciaEnum;
   acessoEnum = AcessoEnum;
   localizacoesProcesso: any[] = [];
-locais: ProcessoLocalPadraoResponse[] = [];
+  locais: ProcessoLocalPadraoResponse[] = [];
   form = this.builder.group({
-    acaoId: [null],
-    foroId: [null],
-    varaId: [null, Validators.required],
-    usuarioResponsavelId: [null],
-    juizo: [''],
-    pasta: [''],
+
+ 
+    usuarioResponsavelId: this.builder.control<string | null>(null),
+   
     titulo: [''],
     numeroProcesso: [''],
-    linkTribunal: [''],
+
     objeto: [''],
-    valorCausa: [null],
+
     distribuido: [null],
-    valorCondenacao: [null],
+
     observacao: [''],
-    instancia: [null],
+   
     acesso: [null],
-      tipoProcesso: [null],
+    tipoProcesso: [null],
     novaLocalizacao: [''],
     localizacaoInicialId: [null, Validators.required]
   });
@@ -117,28 +110,25 @@ locais: ProcessoLocalPadraoResponse[] = [];
     this.mensagemErro = [];
 
     forkJoin({
-      varas: this.varaService.consultar(),
-      acoes: this.acaoService.consultar(),
+     
       usuarios: this.usuarioService.consultarUsuarioResponsavel(),
-      qualificacoes: this.qualificacaoService.consultarQualificacoes(),
+
       etiquetas: this.etiquetaService.consultar(),
       localizacoes: this.processoService.consultarLocais()
     }).subscribe({
       next: (res) => {
 console.log('🔥 PROCESSO BACKEND:', res);
-        const { varas, acoes, usuarios, qualificacoes, etiquetas, localizacoes   } = res as {
+        const { varas, acoes, usuarios, etiquetas, localizacoes   } = res as {
           varas: ConsultarVaraResponse[];
           acoes: ConsultarAcaoResponse[];
           usuarios: ConsultarUsuarioResponse[];
-          qualificacoes: QualificacaoResponse[];
           etiquetas: ConsultarEtiquetaResponse[];
           localizacoes: ProcessoLocalPadraoResponse[];
           
         };
 
         // 🔥 VARAS + FOROS
-        this.varas = varas;
-        this.varasFiltradas = varas;
+       
 this.locais = localizacoes;
         const mapa = new Map<string, string>();
         varas.forEach(v => {
@@ -147,12 +137,8 @@ this.locais = localizacoes;
           }
         });
 
-        this.foros = Array.from(mapa, ([id, nome]) => ({ id, nome }));
-
-        // 🔥 OUTROS DADOS
-        this.acoes = acoes;
+       
         this.responsaveis = usuarios;
-        this.qualificacoes = qualificacoes;
         this.tiposetiquetas = etiquetas;
         this.locais = localizacoes;
 
@@ -189,27 +175,9 @@ this.locais = localizacoes;
     this.carregarDadosIniciais();
     this.carregarProcesso();
 
-    this.form.get('foroId')?.valueChanges.subscribe(foroId => {
-      if (!foroId) {
-        this.varasFiltradas = this.varas;
-        return;
-      }
 
-      this.varasFiltradas = this.varas.filter(v => v.foroId === foroId);
-      this.form.get('varaId')?.setValue(null);
-    });
   }
-  get juizoFormatado(): string {
-    const varaId = this.form.value.varaId;
 
-    if (!varaId) return '';
-
-    const vara = this.varas.find(v => v.id === varaId);
-
-    if (!vara) return '';
-
-    return `${vara.nomeVara} - ${vara.nomeForo}`;
-  }
   // ================= CARREGAR PROCESSO =================
   private carregarProcesso() {
     this.carregando = true;
@@ -223,21 +191,20 @@ const atual = res.localizacoes
   .find((x: any) => x.atual);
         // FORM
         this.form.patchValue({
-          acaoId: res.acaoId,
-          varaId: res.varaId,
-          foroId: res.foroId,
+       
+     
+   
           usuarioResponsavelId: res.usuarioResponsavelId,
-          juizo: res.juizo,
-          pasta: res.pasta,
+      
           titulo: res.titulo,
           numeroProcesso: res.numeroProcesso,
-          linkTribunal: res.linkTribunal,
+    
           objeto: res.objeto,
-          valorCausa: res.valorCausa,
+      
           distribuido: res.distribuido,
-          valorCondenacao: res.valorCondenacao,
+      
           observacao: res.observacao,
-          instancia: res.instancia,
+          
           acesso: res.acesso,
       tipoProcesso: res.tipoProcesso,
   novaLocalizacao: atual?.local ?? null,
@@ -248,14 +215,14 @@ const atual = res.localizacoes
         this.pessoasSelecionadas = (res.grupoClienteProcesso ?? []).map((c: any) => ({
           id: c.idPessoa,
           nome: c.nome,
-          idQualificacao: c.qualificacaoId
+         
         }));
 
         // ENVOLVIDOS
         this.envolvidosSelecionados = (res.grupoEnvolvidosProcesso ?? []).map((e: any) => ({
           id: e.idPessoa,
           nome: e.nome,
-          idQualificacao: e.qualificacaoId
+         
         }));
 
         // ETIQUETAS
@@ -298,32 +265,29 @@ const atual = res.localizacoes
     const limpar = (v: any) => v ?? undefined;
 
     const request: ProcessoUpdateRequest = {
-      acaoId: limpar(f.acaoId),
-      varaId: f.varaId!,
+    
       usuarioResponsavelId: limpar(f.usuarioResponsavelId),
-      juizo: limpar(f.juizo),
-      pasta: limpar(f.pasta),
+  
       titulo: limpar(f.titulo),
       numeroProcesso: limpar(f.numeroProcesso),
-      linkTribunal: limpar(f.linkTribunal),
+     
       objeto: limpar(f.objeto),
-      valorCausa: limpar(f.valorCausa),
+     
       distribuido: limpar(f.distribuido),
-      valorCondenacao: limpar(f.valorCondenacao),
-      observacao: limpar(f.observacao),
-      instancia: limpar(f.instancia),
+
+  
       acesso: limpar(f.acesso),
       tipoProcesso:limpar(f.tipoProcesso),
       novaLocalizacao: limpar(f.novaLocalizacao),
       localizacaoInicialId: limpar(f.localizacaoInicialId),
       grupoClienteProcesso: this.pessoasSelecionadas.map(p => ({
         idPessoa: p.id,
-        idQualificacao: p.idQualificacao ?? undefined
+       
       })),
 
       grupoEnvolvidosProcesso: this.envolvidosSelecionados.map(e => ({
         idPessoa: e.id,
-        idQualificacao: e.idQualificacao ?? undefined
+       
       })),
 
       grupoEtiquetasProcesso: this.etiquetasSelecionadas.map(e => ({
@@ -471,9 +435,7 @@ formatarCampo(campo: string): string {
 
   const map: any = {
     titulo: 'Título',
-    pasta: 'Pasta',
     numeroprocesso: 'Número do Processo',
-    linktribunal: 'Link Tribunal',
     objeto: 'Objeto',
     valorcausa: 'Valor da Causa',
     valorcondenacao: 'Valor da Condenação',

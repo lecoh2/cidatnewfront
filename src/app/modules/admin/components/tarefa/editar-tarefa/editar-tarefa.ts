@@ -17,7 +17,7 @@ import { EditarTarefaRequest } from '../../../../../core/models/tarefa/editar-ta
 import { ListaTarefasResponse } from '../../../../../core/models/tarefa/lista-tarefas-response';
 import { TipoVinculoEnum } from '../../../../../core/models/enums/tipo-vinculo/tipo-vinculoEnum';
 import { ProcessoService } from '../../../../../core/services/processo.service';
-import { CasoService } from '../../../../../core/services/caso.service';
+
 import { AtendimentoService } from '../../../../../core/services/atendimento.service';
 import { finalize } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
@@ -40,7 +40,7 @@ export class EditarTarefa implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private processoService = inject(ProcessoService);
-  private casoService = inject(CasoService);
+
   private atendimentoService = inject(AtendimentoService);
   private cdr = inject(ChangeDetectorRef);
   private historicoService = inject(HistoricoService);
@@ -71,7 +71,6 @@ export class EditarTarefa implements OnInit {
     statusGeralKanban: [StatusGeralKanbanEnum.A_Fazer],
 
     processoId: this.fb.control<string | null>(null),
-    casoId: this.fb.control<string | null>(null),
     atendimentoId: this.fb.control<string | null>(null),
 
     tipoVinculo: this.fb.control<any>(null)
@@ -163,9 +162,7 @@ export class EditarTarefa implements OnInit {
     if (tipo === TipoVinculoEnum.Processo || tipo === 'processo') {
       request$ = this.processoService.consultarProcessoAutoComplete(termo);
     }
-    else if (tipo === TipoVinculoEnum.Caso || tipo === 'caso') {
-      request$ = this.casoService.consultarCasoAutoComplete(termo);
-    }
+    
     else {
       request$ = this.atendimentoService.consultarAtendimentoAutoComplete(termo);
     }
@@ -191,12 +188,7 @@ export class EditarTarefa implements OnInit {
         processoId: item.id
       });
     }
-    else if (tipo === TipoVinculoEnum.Caso || tipo === 'caso') {
-
-      this.form.patchValue({
-        casoId: item.id
-      });
-    }
+    
     else if (tipo === TipoVinculoEnum.Atendimento || tipo === 'atendimento') {
 
       this.form.patchValue({
@@ -223,7 +215,7 @@ export class EditarTarefa implements OnInit {
         let tipoVinculo: TipoVinculoEnum | null = null;
 
         if (res.processoId) tipoVinculo = TipoVinculoEnum.Processo;
-        else if (res.casoId) tipoVinculo = TipoVinculoEnum.Caso;
+  
         else if (res.atendimentoId) tipoVinculo = TipoVinculoEnum.Atendimento;
 
         // 🧾 FORM
@@ -234,7 +226,7 @@ export class EditarTarefa implements OnInit {
           statusGeralKanban: res.statusGeralKanban,
 
           processoId: res.processoId,
-          casoId: res.casoId,
+         
           atendimentoId: res.atendimentoId,
 
           tipoVinculo: tipoVinculo
@@ -270,13 +262,7 @@ export class EditarTarefa implements OnInit {
             pasta: res.processoPasta
           };
         }
-        else if (res.casoId) {
-          this.vinculoSelecionado = {
-            id: res.casoId,
-            tipo: 'caso',
-            pasta: res.casoPasta
-          };
-        }
+        
         else if (res.atendimentoId) {
           this.vinculoSelecionado = {
             id: res.atendimentoId,
@@ -327,7 +313,6 @@ export class EditarTarefa implements OnInit {
     const f = this.form.value;
     const quantidadeVinculos = [
       f.processoId,
-      f.casoId,
       f.atendimentoId
     ].filter(Boolean).length;
 
@@ -355,7 +340,6 @@ export class EditarTarefa implements OnInit {
       // VÍNCULO (GARANTIDO LIMPO)
       // =========================
       processoId: f.processoId ?? null,
-      casoId: f.casoId ?? null,
       atendimentoId: f.atendimentoId ?? null,
 
       // =========================
@@ -420,7 +404,6 @@ export class EditarTarefa implements OnInit {
 
     this.form.patchValue({
       processoId: null,
-      casoId: null,
       atendimentoId: null
     });
 

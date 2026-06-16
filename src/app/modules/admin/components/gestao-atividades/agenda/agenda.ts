@@ -14,7 +14,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import { EventoService } from '../../../../../core/services/evento.service';
 import { TarefaService } from '../../../../../core/services/tarefa.service';
 import { forkJoin } from 'rxjs';
 
@@ -27,7 +26,6 @@ import { forkJoin } from 'rxjs';
 })
 export class Agenda implements OnInit {
 
-    private eventoService = inject(EventoService);
     private tarefaService = inject(TarefaService);
     private ngZone = inject(NgZone);
     private cdr = inject(ChangeDetectorRef);
@@ -71,12 +69,7 @@ export class Agenda implements OnInit {
         eventDidMount: (info) => {
 
             const p: any = info.event.extendedProps || {};
-            const type = p['type'];
-
-            if (type === 'evento') {
-                info.el.title =
-                    `${p['endereco'] ?? ''} | 👤 ${p['criador'] ?? ''}`;
-            }
+            const type = p['type'];           
 
             if (type === 'tarefa') {
                 info.el.title =
@@ -214,39 +207,12 @@ export class Agenda implements OnInit {
         this.mensagemErro = [];
 
         forkJoin({
-            eventos: this.eventoService.consultarEventoPaginado(1, 1000, this.filtro),
+          
             tarefas: this.tarefaService.consultarTarefaPaginado(1, 1000, this.filtro)
         }).subscribe({
-            next: ({ eventos, tarefas }) => {
+            next: ({ tarefas }) => {
 
-                // =========================
-                // EVENTOS
-                // =========================
-                const eventosMapeados = (eventos?.items ?? []).map((e: any) => {
-
-                    const start = new Date(`${e.dataInicial}T${(e.horaInicial || '00:00:00').split('.')[0]}`);
-                    const end = new Date(`${e.dataFinal}T${(e.horaFinal || '00:00:00').split('.')[0]}`);
-
-                    return {
-                        id: String(e.id),
-                        title: e.titulo,
-                        start,
-                        end,
-
-                        backgroundColor: this.getCorStatus(Number(e.statusGeralKanban ?? 0)),
-                        borderColor: this.getCorStatus(Number(e.statusGeralKanban ?? 0)),
-
-                        extendedProps: {
-                            type: 'evento',
-                            endereco: e.endereco,
-                            modalidade: e.modalidade,
-                            status: Number(e.statusGeralKanban ?? 0),
-                            responsaveis: e.grupoEventoResponsavel,
-                            criador: e.usuarioCriacao?.nomeUsuario
-                        }
-                    };
-                });
-
+             
                 // =========================
                 // TAREFAS (CORRIGIDO FINAL)
                 // =========================
@@ -283,7 +249,7 @@ export class Agenda implements OnInit {
                 // =========================
                 // AGENDA FINAL
                 // =========================
-                const agenda = [...eventosMapeados, ...tarefasMapeadas];
+                const agenda = [...tarefasMapeadas];
 
                 this.calendarOptions = {
                     ...this.calendarOptions,

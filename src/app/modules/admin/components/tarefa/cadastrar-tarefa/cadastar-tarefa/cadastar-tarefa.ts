@@ -25,13 +25,12 @@ import { CasoAutoComplete } from '../../../../../../core/models/caso/caso-auto-c
 import { AtendimentoAutoComplete } from '../../../../../../core/models/atendimento/atendimento-auto-complete';
 
 import { ProcessoService } from '../../../../../../core/services/processo.service';
-import { CasoService } from '../../../../../../core/services/caso.service';
+
 import { AtendimentoService } from '../../../../../../core/services/atendimento.service';
 import { ListaTarefasResponse } from '../../../../../../core/models/tarefa/lista-tarefas-response';
 
 type VinculoAutoComplete =
   | ProcessoAutoComplete
-  | CasoAutoComplete
   | AtendimentoAutoComplete;
 
 @Component({
@@ -49,7 +48,7 @@ export class CadastrarTarefa implements OnInit {
   private authHelper = inject(AuthHelper);
   private usuarioService = inject(UsuarioService);
   private processoService = inject(ProcessoService);
-  private casoService = inject(CasoService);
+
   private atendimentoService = inject(AtendimentoService);
 
   usuarioLogado?: AutenticarUsuarioResponse | null;
@@ -81,7 +80,7 @@ export class CadastrarTarefa implements OnInit {
     dataTarefa: ['', Validators.required],
     prioridade: [PrioridadeTarefaEnum.Media],
     statusGeralKanban: [StatusGeralKanbanEnum.A_Fazer],
-    tipoVinculo: this.builder.control<'processo' | 'caso' | 'atendimento' | null>(null),
+    tipoVinculo: this.builder.control<'processo' | 'atendimento' | null>(null),
 
     processoId: this.builder.control<string | null>(null),
     casoId: this.builder.control<string | null>(null),
@@ -171,8 +170,7 @@ export class CadastrarTarefa implements OnInit {
 
     if (tipo === 'processo') {
       request$ = this.processoService.consultarProcessoAutoComplete(termo);
-    } else if (tipo === 'caso') {
-      request$ = this.casoService.consultarCasoAutoComplete(termo);
+    
     } else {
       request$ = this.atendimentoService.consultarAtendimentoAutoComplete(termo);
     }
@@ -197,12 +195,7 @@ export class CadastrarTarefa implements OnInit {
         processoId: item.id
       });
     }
-    else if (tipo === 'caso') {
-
-      this.form.patchValue({
-        casoId: item.id
-      });
-    }
+   
     else if (tipo === 'atendimento') {
 
       this.form.patchValue({
@@ -233,7 +226,6 @@ export class CadastrarTarefa implements OnInit {
     const limpar = (v: any) => v ?? undefined;
     const quantidadeVinculos = [
       f.processoId,
-      f.casoId,
       f.atendimentoId
     ].filter(Boolean).length;
 
@@ -253,8 +245,7 @@ export class CadastrarTarefa implements OnInit {
       usuarioCriacaoId: this.usuarioLogado?.idUsuario,
       responsavelId: limpar(f.responsavelId),
 
-      processoId: limpar(f.processoId),
-      casoId: limpar(f.casoId),
+      processoId: limpar(f.processoId),   
       atendimentoId: limpar(f.atendimentoId),
 
       prioridade: f.prioridade!,
@@ -325,7 +316,6 @@ export class CadastrarTarefa implements OnInit {
 
     this.form.patchValue({
       processoId: null,
-      casoId: null,
       atendimentoId: null
     });
 

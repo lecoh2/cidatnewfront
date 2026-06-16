@@ -25,13 +25,13 @@ import { AuthHelper } from '../../../../../core/helpers/auth.helper';
 
 import { PessoaService } from '../../../../../core/services/pessoa.service';
 import { AtendimentoService } from '../../../../../core/services/atendimento.service';
-import { QualificacoesService } from '../../../../../core/services/qualificacoes.service';
+
 import { EtiquetaService } from '../../../../../core/services/etiqueta.service';
 import { ProcessoService } from '../../../../../core/services/processo.service';
-import { CasoService } from '../../../../../core/services/caso.service';
+
 
 import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
-import { QualificacaoResponse } from '../../../../../core/models/qualificacao/qualificacao-response';
+
 
 import { PessoaResumo } from '../../../../../core/models/pessoa/pessoa-resumo';
 import { PessoaSelecionada } from '../../../../../core/models/pessoa/pessoa-selecionada';
@@ -44,7 +44,6 @@ import { AutenticarUsuarioResponse } from '../../../../../core/models/usuario/au
 
 type VinculoAutoComplete =
   | ProcessoAutoComplete
-  | CasoAutoComplete
   | AtendimentoAutoComplete;
 
 @Component({
@@ -68,13 +67,13 @@ export class CadastrarAtendimento implements OnInit {
 
   private pessoaService = inject(PessoaService);
 
-  private qualificacaoService = inject(QualificacoesService);
+
 
   private etiquetaService = inject(EtiquetaService);
 
   private processoService = inject(ProcessoService);
 
-  private casoService = inject(CasoService);
+
 
   // =========================
   // USUÁRIO
@@ -106,7 +105,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
 
   pessoasFiltradas: PessoaResumo[] = [];
 
-  qualificacoes: QualificacaoResponse[] = [];
+
 
   // =========================
   // ETIQUETAS
@@ -126,14 +125,11 @@ quantidadeAtendimentosMesmoProcesso = 0;
 
     tipoVinculo: this.builder.control<
       'processo'
-      | 'caso'
       | 'atendimento'
       | null
     >(null),
 
     processoId: this.builder.control<string | null>(null),
-
-    casoId: this.builder.control<string | null>(null),
 
     atendimentoId: this.builder.control<string | null>(null),
 
@@ -187,10 +183,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
             .consultarProcessoAutoComplete(valor);
         }
 
-        if (tipo === 'caso') {
-          return this.casoService
-            .consultarCasoAutoComplete(valor);
-        }
+        
 
         return this.atendimentoService
           .consultarAtendimentoAutoComplete(valor);
@@ -244,12 +237,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
       request$ =
         this.processoService.consultarProcessoAutoComplete(termo);
 
-    } else if (tipo === 'caso') {
-
-      request$ =
-        this.casoService.consultarCasoAutoComplete(termo);
-
-    } else {
+    }  else {
 
       request$ =
         this.atendimentoService.consultarAtendimentoAutoComplete(termo);
@@ -282,12 +270,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
         processoId: item.id
       });
     }
-    else if (tipo === 'caso') {
-
-      this.form.patchValue({
-        casoId: item.id
-      });
-    }
+    
     else {
 
       this.form.patchValue({
@@ -350,7 +333,6 @@ quantidadeAtendimentosMesmoProcesso = 0;
 
       processoId: limpar(formValue.processoId),
 
-      casoId: limpar(formValue.casoId),
 
       atendimentoId: limpar(formValue.atendimentoId),
 
@@ -493,7 +475,6 @@ private limparVinculos(): void {
 
   this.form.patchValue({
     processoId: null,
-    casoId: null,
     atendimentoId: null
   });
 

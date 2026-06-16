@@ -38,7 +38,7 @@ import { PessoaService } from '../../../../../core/services/pessoa.service';
 import { AtendimentoService } from '../../../../../core/services/atendimento.service';
 import { EtiquetaService } from '../../../../../core/services/etiqueta.service';
 import { ProcessoService } from '../../../../../core/services/processo.service';
-import { CasoService } from '../../../../../core/services/caso.service';
+
 
 import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
 
@@ -93,7 +93,6 @@ export class EditarAtendimento implements OnInit {
 
   private processoService = inject(ProcessoService);
 
-  private casoService = inject(CasoService);
 
   private fb = inject(FormBuilder);
 
@@ -154,7 +153,6 @@ vinculoAlterado = false;
 
     tipoVinculo: this.fb.control<
       'processo'
-      | 'caso'
       | 'atendimento'
       | null
     >(null),
@@ -290,16 +288,13 @@ this.filtroVinculo.setValue('', {
         // =========================
         let tipo:
           | 'processo'
-          | 'caso'
           | 'atendimento'
           | null = null;
 
         if (res.processoId) {
           tipo = 'processo';
         }
-        else if (res.casoId) {
-          tipo = 'caso';
-        }
+      
         else if (res.atendimentoPaiId) {
           tipo = 'atendimento';
         }
@@ -446,11 +441,7 @@ this.filtroVinculo.setValue('', {
             .consultarProcessoAutoComplete(valor);
         }
 
-        if (tipo === 'caso') {
-
-          return this.casoService
-            .consultarCasoAutoComplete(valor);
-        }
+        
 
         return this.atendimentoService
           .consultarAtendimentoAutoComplete(valor);
@@ -489,10 +480,7 @@ selecionarVinculo(item: VinculoAutoComplete) {
     return;
   }
 
-  if (tipo === 'caso') {
-    this.form.patchValue({ casoId: item.id }, { emitEvent: false });
-    return;
-  }
+  
 
   if (tipo === 'atendimento') {
     this.form.patchValue({ atendimentoPaiId: item.id }, { emitEvent: false });
@@ -538,12 +526,7 @@ selecionarVinculo(item: VinculoAutoComplete) {
         this.processoService
           .consultarProcessoAutoComplete(termo);
     }
-    else if (tipo === 'caso') {
-
-      request$ =
-        this.casoService
-          .consultarCasoAutoComplete(termo);
-    }
+    
     else {
 
       request$ =

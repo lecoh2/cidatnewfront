@@ -37,24 +37,13 @@
   <div *ngFor="let p of selecionadas"
      class="d-flex justify-content-between align-items-center mb-2 px-2 py-2 border-bottom">
 
-  <!-- TEXTO -->
   <div class="d-flex flex-column flex-grow-1">
     <strong>{{ p.nome }}</strong>
-    <small class="text-muted">Documento: {{formatarDocumento(p.documento) }}</small>
+    <small class="text-muted">
+      Documento: {{ formatarDocumento(p.documento) }}
+    </small>
   </div>
 
-  <!-- QUALIFICAÇÃO -->
-  <select [(ngModel)]="p.idQualificacao"
-          class="form-select form-select-sm mx-2"
-          style="max-width: 160px;">
-    <option [ngValue]="null">Qualificação</option>
-    <option *ngFor="let q of qualificacoes"
-            [ngValue]="q.idQualificacao">
-      {{ q.nomeQualificacao }}
-    </option>
-  </select>
-
-  <!-- BOTÃO -->
   <button type="button"
           class="border-0 bg-transparent p-0 ms-2"
           (click)="remover(p)">

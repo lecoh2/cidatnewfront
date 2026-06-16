@@ -11,27 +11,25 @@ import { CadastrarPessoas } from "./components/pessoa/cadastrar-pessoa/cadastrar
 import { ConsultarPessoas } from "./components/pessoa/consultar-pessoas/consultar-pessoas";
 import { CadastrarProcesso } from "./components/processo/cadastrar-processo/cadastrar-processo";
 import { CadastrarAtendimento } from "./components/atendimento/cadastrar-atendimento/cadastrar-atendimento";
-import { CadastrarCaso } from "./components/caso/cadastrar-caso/cadastrar-caso";
 import { GestaoAtividades } from "./components/gestao-atividades/gestao/gestao-atividades";
 import { CadastrarTarefa } from "./components/tarefa/cadastrar-tarefa/cadastar-tarefa/cadastar-tarefa";
-import { CadastrarEvento } from "./components/evento/cadastrar-evento/cadastrar-evento";
+
 import { EditarTarefa } from "./components/tarefa/editar-tarefa/editar-tarefa";
-import { EditarEvento } from "./components/evento/editar-evento/editar-evento";
+
 import { ConsultarAtendimento } from "./components/atendimento/consultar-atendimento/consultar-atendimento";
 import { EditarAtendimento } from "./components/atendimento/editar-atendimento/editar-atendimento";
-import { ConsultarCaso } from "./components/caso/consultar-caso/consultar-caso";
+
 import { ConsultarProcesso } from "./components/processo/consultar-processo/consultar-processo";
-import { EditarCaso } from "./components/caso/editar-caso/editar-caso";
+
 import { EditarProcesso } from "./components/processo/editar-processo/editar-processo";
 import { ConsultarTarefa } from "./components/tarefa/consultar-tarefa/consultar-tarefa";
-import { ConsultarEvento } from "./components/evento/consultar-evento/consultar-evento";
+
 
 import { Agenda } from "./components/gestao-atividades/agenda/agenda";
 import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 import { Perfil } from "./components/usuario/perfil/perfil";
 import { EditarUsuario } from "./components/usuario/editar-usuario/editar-usuario";
 import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consultar-usuarios";
-import { ImportarProcessoExcel } from "./components/processo/importar/importar-processo-excel";
 import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
 
 import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbord-relatorio-mensal";
@@ -94,14 +92,6 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-
-            {
-                path: 'importar-processo-excel',
-                component: ImportarProcessoExcel,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            },
             //atendmento
             {
                 path: 'cadastrar-atendimento',
@@ -122,27 +112,8 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-            //ação
-            {
-                path: 'cadastrar-caso',
-                component: CadastrarCaso,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            }, {
-                path: 'consultar-caso',
-                component: ConsultarCaso,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            },
-            {
-                path: 'editar-caso/:id',
-                component: EditarCaso,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            },
+        
+           
             //tarefa
             {
                 path: 'cadastrar-tarefa',
@@ -165,26 +136,7 @@ export const routes: Routes = [
                 data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
-            {
-                path: 'cadastrar-evento',
-                component: CadastrarEvento,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            }, {
-                path: 'editar-evento/:id',
-                component: EditarEvento,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            },
-            {
-                path: 'consultar-evento',
-                component: ConsultarEvento,
-                canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
-
-            },
+           
             //atividades
             {
                 path: 'gestao-atividades',

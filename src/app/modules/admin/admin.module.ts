@@ -19,30 +19,27 @@ import { AutocompletePessoa } from "./components/autocomplete-pessoas/autocomple
 import { CadastrarAtendimento } from "./components/atendimento/cadastrar-atendimento/cadastrar-atendimento";
 import { AutocompletePessoaAtendimento } from "./components/autocomplete-pessoas-atendimento/autocomplete-pessoa-atendimento";
 import { Vinculo } from "./components/auto-complete-vinculos-proc-caso-atend/vinculo";
-import { CadastrarCaso } from "./components/caso/cadastrar-caso/cadastrar-caso";
+
 import { GestaoAtividades } from "./components/gestao-atividades/gestao/gestao-atividades";
 import { CadastrarTarefa } from "./components/tarefa/cadastrar-tarefa/cadastar-tarefa/cadastar-tarefa";
 import { CadastrarResponsaveis } from "./components/responsaveis/cadastrar-responsaveis";
 import { AutocompleteListaTarefas } from "./components/auto-complete-lista-tarefas/autocomplete-lista-tarefas";
-import { CadastrarEvento } from "./components/evento/cadastrar-evento/cadastrar-evento";
-import { EditarCaso } from "./components/caso/editar-caso/editar-caso";
+
+
 import { EditarTarefa } from "./components/tarefa/editar-tarefa/editar-tarefa";
-import { EditarEvento } from "./components/evento/editar-evento/editar-evento";
+
 import { ConsultarAtendimento } from "./components/atendimento/consultar-atendimento/consultar-atendimento";
 import { EditarAtendimento } from "./components/atendimento/editar-atendimento/editar-atendimento";
-import { ConsultarCaso } from "./components/caso/consultar-caso/consultar-caso";
+
 import { ConsultarProcesso } from "./components/processo/consultar-processo/consultar-processo";
 import { EditarProcesso } from "./components/processo/editar-processo/editar-processo";
 import { ConsultarTarefa } from "./components/tarefa/consultar-tarefa/consultar-tarefa";
-import { ConsultarEvento } from "./components/evento/consultar-evento/consultar-evento";
 import { Agenda } from "./components/gestao-atividades/agenda/agenda";
-import { Calendario } from "./components/calendario/calendario";
 import { DragDropModule } from "@angular/cdk/drag-drop";
 import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 import { Perfil } from "./components/usuario/perfil/perfil";
 import { EditarUsuario } from "./components/usuario/editar-usuario/editar-usuario";
 import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consultar-usuarios";
-import { ImportarProcessoExcel } from "./components/processo/importar/importar-processo-excel";
 import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
 import { DashboardCards } from "./components/processo/dashboard/dashboard-cards";
 import { DashboardAtendimentos } from "./components/processo/dashboard/dashboard-atendimentos";
@@ -61,7 +58,6 @@ import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbo
     declarations: [//componente do módulo
 
         Agenda,
-        Calendario,
         AdminLayout,
         PainelPrincipal,
         CadastrarPessoas,
@@ -71,20 +67,14 @@ import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbo
         ConsultarProcesso,
         EditarProcesso,
         DetalhesProcesso,
-        ImportarProcessoExcel,
         CadastrarAtendimento,
         ConsultarAtendimento,
         EditarAtendimento,
-        CadastrarCaso,
-        ConsultarCaso,
-        EditarCaso,
         GestaoAtividades,
         CadastrarTarefa,
         EditarTarefa,
         ConsultarTarefa,
-        CadastrarEvento,
-        EditarEvento,
-        ConsultarEvento,
+
         CriarUsuario,
         EditarUsuario,
         ConsultarUsuarios,

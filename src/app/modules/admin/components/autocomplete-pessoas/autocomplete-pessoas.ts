@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { PessoaResumo } from '../../../../core/models/pessoa/pessoa-resumo';
 import { PessoaSelecionada } from '../../../../core/models/pessoa/pessoa-selecionada';
-import { QualificacaoResponse } from '../../../../core/models/qualificacao/qualificacao-response';
+
 
 @Component({
     standalone:false,
@@ -13,7 +13,7 @@ export class AutocompletePessoa {
 
   @Input() label: string = 'Pessoa';
   @Input() placeholder: string = 'Digite o nome';
-  @Input() qualificacoes: QualificacaoResponse[] = [];
+
 
   // 🔥 RESULTADOS DA BUSCA
   @Input() resultados: PessoaResumo[] = [];
@@ -36,10 +36,9 @@ export class AutocompletePessoa {
     const jaExiste = this.selecionadas.some(x => x.id === p.id);
 
     if (!jaExiste) {
-      const novaPessoa: PessoaSelecionada = {
-        ...p,
-        idQualificacao: null
-      };
+    const novaPessoa: PessoaSelecionada = {
+  ...p
+};
 
       this.selecionadas = [...this.selecionadas, novaPessoa];
       this.selecionadasChange.emit(this.selecionadas);
