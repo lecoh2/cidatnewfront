@@ -135,12 +135,18 @@ getLabel(item: any): string {
 
   if (!item) return '';
 
-  if (item.assunto) {
-    return item.assunto; // atendimento
+  // Processo
+  if (item.numeroProcesso) {
+
+    return `${this.formatarProcesso(item.numeroProcesso)}`;
+
   }
 
-  if (item.pasta) {
-    return item.pasta; // processo e caso
+  // Atendimento
+  if (item.assunto) {
+
+    return item.assunto;
+
   }
 
   return '';
@@ -156,4 +162,20 @@ getLabel(item: any): string {
   fechar() {
     setTimeout(() => this.mostrarSugestoes = false, 200);
   }
+
+  formatarProcesso(numero?: string): string {
+
+  if (!numero) return '';
+
+  const numeros = numero.replace(/\D/g, '');
+
+  if (numeros.length === 13) {
+    return numeros.replace(
+      /(\d{3})(\d{6})(\d{4})/,
+      '$1/$2/$3'
+    );
+  }
+
+  return numero;
+}
 }

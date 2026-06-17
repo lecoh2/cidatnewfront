@@ -53,3 +53,8 @@
   pointer-events: none;
 }
 
+.fa-pencil-alt:hover,
+.fa-eye:hover {
+    transform: scale(1.15);
+    transition: .2s;
+}

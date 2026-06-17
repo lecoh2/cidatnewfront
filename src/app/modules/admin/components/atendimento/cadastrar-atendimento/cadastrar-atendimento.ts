@@ -37,7 +37,7 @@ import { PessoaResumo } from '../../../../../core/models/pessoa/pessoa-resumo';
 import { PessoaSelecionada } from '../../../../../core/models/pessoa/pessoa-selecionada';
 
 import { ProcessoAutoComplete } from '../../../../../core/models/processo/processo-auto-complete';
-import { CasoAutoComplete } from '../../../../../core/models/caso/caso-auto-complete';
+
 import { AtendimentoAutoComplete } from '../../../../../core/models/atendimento/atendimento-auto-complete';
 
 import { AutenticarUsuarioResponse } from '../../../../../core/models/usuario/autenticar-usuario.response';
@@ -88,7 +88,7 @@ export class CadastrarAtendimento implements OnInit {
   mensagemSucesso: string[] = [];
 
   carregando = false;
-quantidadeAtendimentosMesmoProcesso = 0;
+  quantidadeAtendimentosMesmoProcesso = 0;
   // =========================
   // AUTOCOMPLETE VÍNCULO
   // =========================
@@ -154,7 +154,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
 
       this.filtroVinculo.setValue('');
 
-   this.limparVinculos();
+      this.limparVinculos();
     });
 
     // 🔥 AUTOCOMPLETE
@@ -183,7 +183,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
             .consultarProcessoAutoComplete(valor);
         }
 
-        
+
 
         return this.atendimentoService
           .consultarAtendimentoAutoComplete(valor);
@@ -237,7 +237,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
       request$ =
         this.processoService.consultarProcessoAutoComplete(termo);
 
-    }  else {
+    } else {
 
       request$ =
         this.atendimentoService.consultarAtendimentoAutoComplete(termo);
@@ -262,7 +262,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
     this.vinculoSelecionado = item;
 
     // 🔥 limpa tudo antes
- this.limparVinculos();
+    this.limparVinculos();
 
     if (tipo === 'processo') {
 
@@ -270,7 +270,7 @@ quantidadeAtendimentosMesmoProcesso = 0;
         processoId: item.id
       });
     }
-    
+
     else {
 
       this.form.patchValue({
@@ -355,29 +355,29 @@ quantidadeAtendimentosMesmoProcesso = 0;
       .cadastrarAtendimento(request)
       .subscribe({
 
- next: (res) => {
+        next: (res) => {
 
-  this.resetar();
+          this.resetar();
 
-  this.carregando = false;
+          this.carregando = false;
 
-  this.mensagemSucesso = [res.message];
+          this.mensagemSucesso = [res.message];
 
-  // 🔥 QUANTIDADE DE ATENDIMENTOS
-  const quantidade =
-    res.data.quantidadeAtendimentosMesmoProcesso;
+          // 🔥 QUANTIDADE DE ATENDIMENTOS
+          const quantidade =
+            res.data.quantidadeAtendimentosMesmoProcesso;
 
-  if (quantidade > 0) {
+          if (quantidade > 0) {
 
-    this.mensagemSucesso.push(
-      `Este cliente já possui ${quantidade} atendimento(s) neste processo.`
-    );
-  }
+            this.mensagemSucesso.push(
+              `Este cliente já possui ${quantidade} atendimento(s) neste processo.`
+            );
+          }
 
-  this.router.navigate([
-    '/admin/cadastrar-atendimento'
-  ]);
-},
+          this.router.navigate([
+            '/admin/cadastrar-atendimento'
+          ]);
+        },
 
         error: (err: HttpErrorResponse) => {
           this.tratarErro(err);
@@ -404,29 +404,42 @@ quantidadeAtendimentosMesmoProcesso = 0;
   // =========================
   // LABEL AUTOCOMPLETE
   // =========================
-  getLabel(
-    item: ProcessoAutoComplete
-      | CasoAutoComplete
-      | AtendimentoAutoComplete
-  ): string {
+getLabel(item: any): string {
 
-    if ('numeroProcesso' in item) {
+  if (!item) return '';
 
-      const cnj = this.formatarCNJ(item.numeroProcesso);
+  // Processo
+  if (item.numeroProcesso) {
 
-      return `${cnj} - ${item.pasta ?? ''}`;
-    }
+    return `${this.formatarProcesso(item.numeroProcesso)} - ${item.pasta ?? ''}`;
 
-    if ('pasta' in item) {
-      return item.pasta;
-    }
-
-    if ('assunto' in item) {
-      return item.assunto;
-    }
-
-    return '';
   }
+
+  // Atendimento
+  if (item.assunto) {
+
+    return item.assunto;
+
+  }
+
+  return '';
+}private formatarProcesso(numero?: string): string {
+
+  if (!numero) return '';
+
+  const numeros = numero.replace(/\D/g, '');
+
+  // formato 000/000000/0000
+  if (numeros.length === 13) {
+
+    return numeros.replace(
+      /(\d{3})(\d{6})(\d{4})/,
+      '$1/$2/$3'
+    );
+  }
+
+  return numero;
+}
 
   // =========================
   // FORMATAR CNJ
@@ -471,15 +484,15 @@ quantidadeAtendimentosMesmoProcesso = 0;
 
     this.carregando = false;
   }
-private limparVinculos(): void {
+  private limparVinculos(): void {
 
-  this.form.patchValue({
-    processoId: null,
-    atendimentoId: null
-  });
+    this.form.patchValue({
+      processoId: null,
+      atendimentoId: null
+    });
 
-  this.vinculoSelecionado = null;
+    this.vinculoSelecionado = null;
 
-  this.resultadosVinculo = [];
-}
+    this.resultadosVinculo = [];
+  }
 }

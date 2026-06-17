@@ -11,7 +11,7 @@ import { ActivatedRoute } from "@angular/router";
 import { Router } from "@angular/router";
 import { ProcessoService } from "../../../../../core/services/processo.service";
 import { AuthHelper } from "../../../../../core/helpers/auth.helper";
-import { VaraService } from "../../../../../core/services/vara.service";
+
 import { UsuarioService } from "../../../../../core/services/usuario.service";
 import { AcaoService } from "../../../../../core/services/acao.service";
 import { PessoaService } from "../../../../../core/services/pessoa.service";
@@ -51,7 +51,7 @@ export class EditarProcesso implements OnInit {
   private route = inject(ActivatedRoute);
   private processoService = inject(ProcessoService);
   private authHelper = inject(AuthHelper);
-  private varaService = inject(VaraService);
+
   private acaoService = inject(AcaoService);
   private usuarioService = inject(UsuarioService);
   private pessoaService = inject(PessoaService);
@@ -88,56 +88,51 @@ export class EditarProcesso implements OnInit {
   locais: ProcessoLocalPadraoResponse[] = [];
   form = this.builder.group({
 
- 
+
     usuarioResponsavelId: this.builder.control<string | null>(null),
-   
+
     titulo: [''],
-    numeroProcesso: [''],
+    numeroProcesso: ['', Validators.required],
 
     objeto: [''],
 
     distribuido: [null],
 
-    observacao: [''],
-   
+    observacao: ['', [Validators.required, Validators.minLength(20)]],
+
     acesso: [null],
     tipoProcesso: [null],
     novaLocalizacao: [''],
     localizacaoInicialId: [null, Validators.required]
   });
+  get podeEnviar(): boolean {
+    return this.form.valid;
+  }
+
   private carregarDadosIniciais() {
     this.carregando = true;
     this.mensagemErro = [];
 
     forkJoin({
-     
+
       usuarios: this.usuarioService.consultarUsuarioResponsavel(),
 
       etiquetas: this.etiquetaService.consultar(),
       localizacoes: this.processoService.consultarLocais()
     }).subscribe({
       next: (res) => {
-console.log('🔥 PROCESSO BACKEND:', res);
-        const { varas, acoes, usuarios, etiquetas, localizacoes   } = res as {
-          varas: ConsultarVaraResponse[];
-          acoes: ConsultarAcaoResponse[];
+        console.log('🔥 PROCESSO BACKEND:', res);
+        const { usuarios, etiquetas, localizacoes } = res as {
+
           usuarios: ConsultarUsuarioResponse[];
           etiquetas: ConsultarEtiquetaResponse[];
           localizacoes: ProcessoLocalPadraoResponse[];
-          
+
         };
 
-        // 🔥 VARAS + FOROS
-       
-this.locais = localizacoes;
-        const mapa = new Map<string, string>();
-        varas.forEach(v => {
-          if (v.foroId && v.nomeForo) {
-            mapa.set(v.foroId, v.nomeForo);
-          }
-        });
+        this.locais = localizacoes;
 
-       
+
         this.responsaveis = usuarios;
         this.tiposetiquetas = etiquetas;
         this.locais = localizacoes;
@@ -185,44 +180,38 @@ this.locais = localizacoes;
     this.processoService.ObterProcessoPorId(this.id).subscribe({
       next: (res: any) => {
         console.log('🔥 PROCESSO BACKEND:', res); // 👈 AQUI
-const atual = res.localizacoes
-  ?.slice()
-  .sort((a: any, b: any) => new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime())
-  .find((x: any) => x.atual);
+        const atual = res.localizacoes
+          ?.slice()
+          .sort((a: any, b: any) => new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime())
+          .find((x: any) => x.atual);
         // FORM
         this.form.patchValue({
-       
-     
-   
+
+
+
           usuarioResponsavelId: res.usuarioResponsavelId,
-      
+
           titulo: res.titulo,
           numeroProcesso: res.numeroProcesso,
-    
-          objeto: res.objeto,
-      
           distribuido: res.distribuido,
-      
           observacao: res.observacao,
-          
-          acesso: res.acesso,
-      tipoProcesso: res.tipoProcesso,
-  novaLocalizacao: atual?.local ?? null,
-  localizacaoInicialId: atual?.id ?? null
+          tipoProcesso: res.tipoProcesso,
+          novaLocalizacao: atual?.local ?? null,
+          localizacaoInicialId: atual?.id ?? null
         }, { emitEvent: false });
 
         // CLIENTES
         this.pessoasSelecionadas = (res.grupoClienteProcesso ?? []).map((c: any) => ({
           id: c.idPessoa,
           nome: c.nome,
-         
+
         }));
 
         // ENVOLVIDOS
         this.envolvidosSelecionados = (res.grupoEnvolvidosProcesso ?? []).map((e: any) => ({
           id: e.idPessoa,
           nome: e.nome,
-         
+
         }));
 
         // ETIQUETAS
@@ -249,45 +238,34 @@ const atual = res.localizacoes
       return;
     }
 
-    if (this.pessoasSelecionadas.some(p => !p.idQualificacao)) {
-      this.mensagemErro = ['Selecione a qualificação para todos os clientes.'];
-      return;
-    }
-
-    if (this.envolvidosSelecionados.some(e => !e.idQualificacao)) {
-      this.mensagemErro = ['Selecione a qualificação para todos os envolvidos.'];
-      return;
-    }
-
     this.carregando = true;
 
     const f = this.form.value;
     const limpar = (v: any) => v ?? undefined;
 
     const request: ProcessoUpdateRequest = {
-    
+
       usuarioResponsavelId: limpar(f.usuarioResponsavelId),
-  
+
       titulo: limpar(f.titulo),
       numeroProcesso: limpar(f.numeroProcesso),
-     
-      objeto: limpar(f.objeto),
-     
-      distribuido: limpar(f.distribuido),
 
-  
-      acesso: limpar(f.acesso),
-      tipoProcesso:limpar(f.tipoProcesso),
+      objeto: limpar(f.objeto),
+
+      distribuido: limpar(f.distribuido),
+      observacao: limpar(f.observacao),
+
+      tipoProcesso: limpar(f.tipoProcesso),
       novaLocalizacao: limpar(f.novaLocalizacao),
       localizacaoInicialId: limpar(f.localizacaoInicialId),
       grupoClienteProcesso: this.pessoasSelecionadas.map(p => ({
         idPessoa: p.id,
-       
+
       })),
 
       grupoEnvolvidosProcesso: this.envolvidosSelecionados.map(e => ({
         idPessoa: e.id,
-       
+
       })),
 
       grupoEtiquetasProcesso: this.etiquetasSelecionadas.map(e => ({
@@ -330,143 +308,143 @@ const atual = res.localizacoes
     this.carregando = false;
   }
 
-abrirHistoricoProcesso(processoId: string) {
+  abrirHistoricoProcesso(processoId: string) {
 
-  this.carregandoHistorico = true;
+    this.carregandoHistorico = true;
 
-  this.historico = [];
+    this.historico = [];
 
-  const modal =
-    new bootstrap.Modal(
-      this.modalHistorico.nativeElement
+    const modal =
+      new bootstrap.Modal(
+        this.modalHistorico.nativeElement
+      );
+
+    modal.show();
+
+    this.historicoService
+      .ConsultarHistorico(
+        TipoEntidadeEnum.Processo, // ✅ CORRETO
+        processoId
+      )
+      .subscribe({
+
+        next: (res) => {
+
+          this.historico = (res ?? []).map(h => ({
+            ...h,
+            antes: h.dadosAntes
+              ? JSON.parse(h.dadosAntes)
+              : null,
+
+            depois: h.dadosDepois
+              ? JSON.parse(h.dadosDepois)
+              : null
+          }));
+
+          console.log('🔥 HISTORICO:', this.historico);
+
+          this.carregandoHistorico = false;
+
+          this.cdr.detectChanges();
+        },
+
+        error: (err) => {
+
+          console.error(err);
+
+          this.carregandoHistorico = false;
+        }
+
+      });
+  }
+
+
+
+  formatarValor(valor: any, campo: string): string {
+
+    if (valor === null || valor === undefined) return '-';
+
+    // ARRAY
+    if (Array.isArray(valor)) {
+      return valor.map(v => this.extrairTexto(v)).join(', ');
+    }
+
+    // BOOLEAN
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sim' : 'Não';
+    }
+
+    // DATA
+    if (campo.toLowerCase().includes('data')) {
+      const d = new Date(valor);
+      return isNaN(d.getTime()) ? valor : d.toLocaleString('pt-BR');
+    }
+
+    // OBJETO
+    if (typeof valor === 'object') {
+      return this.extrairTexto(valor);
+    }
+
+    return valor.toString();
+  }
+  private extrairTexto(obj: any): string {
+    if (!obj) return '-';
+
+    const normalizado = this.normalizarObjeto(obj);
+
+    return (
+      normalizado.local ||
+      normalizado.nome ||
+      normalizado.descricao ||
+      normalizado.titulo ||
+      JSON.stringify(obj)
     );
+  }
+  private normalizarObjeto(obj: any): any {
+    const resultado: any = {};
 
-  modal.show();
-
-  this.historicoService
-    .ConsultarHistorico(
-      TipoEntidadeEnum.Processo, // ✅ CORRETO
-      processoId
-    )
-    .subscribe({
-
-      next: (res) => {
-
-        this.historico = (res ?? []).map(h => ({
-          ...h,
-          antes: h.dadosAntes
-            ? JSON.parse(h.dadosAntes)
-            : null,
-
-          depois: h.dadosDepois
-            ? JSON.parse(h.dadosDepois)
-            : null
-        }));
-
-        console.log('🔥 HISTORICO:', this.historico);
-
-        this.carregandoHistorico = false;
-
-        this.cdr.detectChanges();
-      },
-
-      error: (err) => {
-
-        console.error(err);
-
-        this.carregandoHistorico = false;
-      }
-
+    Object.keys(obj).forEach(key => {
+      resultado[key.toLowerCase()] = obj[key];
     });
-}
 
-
-
- formatarValor(valor: any, campo: string): string {
-
-  if (valor === null || valor === undefined) return '-';
-
-  // ARRAY
-  if (Array.isArray(valor)) {
-    return valor.map(v => this.extrairTexto(v)).join(', ');
+    return resultado;
   }
+  formatarCampo(campo: string): string {
 
-  // BOOLEAN
-  if (typeof valor === 'boolean') {
-    return valor ? 'Sim' : 'Não';
+    const map: any = {
+      titulo: 'Título',
+      numeroprocesso: 'Número do Processo',
+      objeto: 'Objeto',
+      valorcausa: 'Valor da Causa',
+      valorcondenacao: 'Valor da Condenação',
+      distribuido: 'Distribuído',
+      observacao: 'Observação',
+      instancia: 'Instância',
+      acesso: 'Acesso',
+      clientes: 'Clientes',
+      envolvidos: 'Envolvidos',
+      etiquetas: 'Etiquetas',
+      localizacao: 'Localização',
+      novaLocalizacao: 'Localização'
+    };
+
+    return map[campo.toLowerCase()] || campo;
+  } getMudancas(h: any): any[] {
+
+    if (!h?.dadosAntes)
+      return [];
+
+    try {
+
+      const dados = JSON.parse(h.dadosAntes);
+
+      return Array.isArray(dados)
+        ? dados
+        : [];
+
+    } catch {
+
+      return [];
+    }
   }
-
-  // DATA
- if (campo.toLowerCase().includes('data')) {
-  const d = new Date(valor);
-  return isNaN(d.getTime()) ? valor : d.toLocaleString('pt-BR');
-}
-
-  // OBJETO
-  if (typeof valor === 'object') {
-    return this.extrairTexto(valor);
-  }
-
-  return valor.toString();
-}
-private extrairTexto(obj: any): string {
-  if (!obj) return '-';
-
-  const normalizado = this.normalizarObjeto(obj);
-
-  return (
-    normalizado.local ||
-    normalizado.nome ||
-    normalizado.descricao ||
-    normalizado.titulo ||
-    JSON.stringify(obj)
-  );
-}
-private normalizarObjeto(obj: any): any {
-  const resultado: any = {};
-
-  Object.keys(obj).forEach(key => {
-    resultado[key.toLowerCase()] = obj[key];
-  });
-
-  return resultado;
-}
-formatarCampo(campo: string): string {
-
-  const map: any = {
-    titulo: 'Título',
-    numeroprocesso: 'Número do Processo',
-    objeto: 'Objeto',
-    valorcausa: 'Valor da Causa',
-    valorcondenacao: 'Valor da Condenação',
-    distribuido: 'Distribuído',
-    observacao: 'Observação',
-    instancia: 'Instância',
-    acesso: 'Acesso',
-    clientes: 'Clientes',
-    envolvidos: 'Envolvidos',
-    etiquetas: 'Etiquetas',
-  localizacao: 'Localização',
-novaLocalizacao: 'Localização'
-  };
-
-  return map[campo.toLowerCase()] || campo;
-} getMudancas(h: any): any[] {
-
-  if (!h?.dadosAntes)
-    return [];
-
-  try {
-
-    const dados = JSON.parse(h.dadosAntes);
-
-    return Array.isArray(dados)
-      ? dados
-      : [];
-
-  } catch {
-
-    return [];
-  }
-}
 }

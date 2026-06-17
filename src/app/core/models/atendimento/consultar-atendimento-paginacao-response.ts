@@ -10,6 +10,11 @@ export interface ConsultarAtendimentoPaginacaoResponse {
   atendimentoPaiId?: string;
   responsavelId?: string;
 
+idControleAtendimento?: string;
+codigoControle?: number;
+anoBaseControle?: string;
+numeroControle?: string;
+
   grupoAtendimentoCliente: GrupoAtendimentoClienteResponse[];
   grupoAtendimentoEtiqueta: GrupoEtiquetaAtendimentoResponse[];
 }

@@ -1,18 +1,70 @@
-<input
-  type="text"
-  class="form-control"
-  [formControl]="control"
-  (focus)="abrir()"
-  (blur)="fechar()"
-/>
+<div class="position-relative">
 
-<ul *ngIf="mostrarSugestoes && resultados.length > 0"
-    class="list-group position-absolute w-100">
+  <input
+    type="text"
+    class="form-control"
+    [formControl]="control"
+    placeholder="Digite para pesquisar..."
+    (focus)="abrir()"
+    (blur)="fechar()">
 
-  <li *ngFor="let item of resultados"
-      class="list-group-item"
+  <div
+    *ngIf="mostrarSugestoes && resultados.length > 0"
+    class="autocomplete-card shadow">
+
+    <div
+      *ngFor="let item of resultados"
+      class="autocomplete-item"
       (mousedown)="selecionar(item)">
-    {{ getLabel(item) }}
-  </li>
 
-</ul>
+      <!-- PROCESSO -->
+      <ng-container *ngIf="item.numeroProcesso">
+
+        <div class="icone-processo">
+          <i class="fas fa-folder-open"></i>
+        </div>
+
+        <div class="conteudo">
+
+          <div class="titulo">
+
+            {{ formatarProcesso(item.numeroProcesso) }}
+
+          </div>
+
+       
+
+        </div>
+
+      </ng-container>
+
+      <!-- ATENDIMENTO -->
+      <ng-container *ngIf="item.assunto">
+
+        <div class="icone-atendimento">
+          <i class="fas fa-headset"></i>
+        </div>
+
+        <div class="conteudo">
+
+          <div class="titulo">
+
+            Atendimento
+
+          </div>
+
+          <div class="subtitulo">
+
+            {{ item.assunto }}
+
+          </div>
+
+        </div>
+
+      </ng-container>
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+declare var bootstrap: any;
+import { AfterViewInit, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 
@@ -6,13 +7,16 @@ import { ProcessoService } from '../../../../../core/services/processo.service';
 
 @Component({
   selector: 'app-consultar-processo',
-  standalone:false,
+  standalone: false,
   templateUrl: './consultar-processo.html',
   styleUrl: './consultar-processo.css',
 })
-export class ConsultarProcesso implements OnInit {
+export class ConsultarProcesso implements OnInit, AfterViewInit {
 
-  displayedColumns: string[] = ['pasta', 'numeroProcesso', 'titulo', 'acoes'];
+  ngAfterViewInit(): void {
+    this.inicializarTooltips();
+  }
+  displayedColumns: string[] = ['numeroProcesso', 'assunto', 'localizacao', 'acoes'];
 
   dataSource = new MatTableDataSource<any>([]);
   consulta: any[] = [];
@@ -32,7 +36,24 @@ export class ConsultarProcesso implements OnInit {
   private processoService = inject(ProcessoService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private inicializarTooltips(): void {
 
+    const tooltipTriggerList =
+      document.querySelectorAll('[data-bs-toggle="tooltip"]');
+
+    tooltipTriggerList.forEach((el: any) => {
+
+      const tooltipExistente =
+        bootstrap.Tooltip.getInstance(el);
+
+      if (tooltipExistente) {
+        tooltipExistente.dispose();
+      }
+
+      new bootstrap.Tooltip(el);
+
+    });
+  }
   ngOnInit(): void {
     this.carregarProcessos();
   }
@@ -62,7 +83,11 @@ export class ConsultarProcesso implements OnInit {
           this.atualizarPaginasVisiveis();
 
           this.carregando = false;
-          this.cdr.detectChanges();
+      this.cdr.detectChanges();
+
+setTimeout(() => {
+  this.inicializarTooltips();
+}, 100);
         },
         error: () => {
           this.mensagemErro = ['Erro ao consultar processos.'];
@@ -88,6 +113,21 @@ export class ConsultarProcesso implements OnInit {
     this.paginasVisiveis = Array.from(
       { length: end - start + 1 },
       (_, i) => start + i
+    );
+  }
+  formatarNumeroProcesso(numero?: string): string {
+
+    if (!numero) return '';
+
+    const numeros = numero.replace(/\D/g, '');
+
+    if (numeros.length !== 13) {
+      return numero;
+    }
+
+    return numeros.replace(
+      /(\d{3})(\d{6})(\d{4})/,
+      '$1/$2/$3'
     );
   }
 }

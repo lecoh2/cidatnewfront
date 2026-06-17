@@ -75,7 +75,7 @@ export class CadastrarProcesso implements OnInit {
     usuarioResponsavelId: this.builder.control<string | null>(null),
 
     numeroProcesso: ['', Validators.required],
-   
+
     objeto: [''],
 
     distribuido: [null],
@@ -207,7 +207,7 @@ export class CadastrarProcesso implements OnInit {
       distribuido: limpar(formValue.distribuido),
       observacao: limpar(formValue.observacao),
       localizacaoInicialId: limpar(formValue.localizacaoInicialId),
-
+      tipoProcesso: limpar(formValue.tipoProcesso),
       grupoClienteProcesso: this.pessoasSelecionadas.map(p => ({
         idPessoa: p.id,
 
