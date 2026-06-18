@@ -96,7 +96,7 @@
                 </div>
                 <div class="row mb-3">
 
-                    <!-- HEADER INLINE (lado a lado de verdade) -->
+                    <!-- HEADER INLINE (lado a lado de verdade) 
                     <div class="col-12 mb-2">
 
                         <div class="d-inline-flex align-items-center gap-3">
@@ -115,8 +115,8 @@
                         </div>
 
                     </div>
-
-                    <!-- ITENS -->
+ -->
+                    <!-- ITENS 
                     <div *ngFor="let item of listasTarefa; let i = index" class="col-md-4 d-flex mb-2">
 
                         <input type="text" class="form-control me-2" [value]="item.descricao"
@@ -127,16 +127,16 @@
                             <i class="fas fa-trash"></i>
                         </button>
 
-                    </div>
+                    </div>-->
 
 
-                    <div class="col-md-6">
+                    <!--<div class="col-md-6">
 
                         <app-autocomplete-lista-tarefas label="Listas de tarefas existentes"
                             placeholder="Digite a descrição" [resultados]="listaFiltradas"
                             [(selecionadas)]="listasTarefa" (buscar)="buscarListaTarefas($event)">
                         </app-autocomplete-lista-tarefas>
-                    </div>
+                    </div>-->
                 </div> <!-- BOTÃO -->
                 <button type="submit" class="btn btn-primary" [disabled]="!podeEnviar || carregando">
                     <i class="align-middle me-2 fas fa-save fa-lg"></i> Salvar

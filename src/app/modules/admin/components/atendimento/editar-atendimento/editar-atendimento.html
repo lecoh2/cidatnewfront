@@ -2,10 +2,63 @@
   <h1 class="h3 mb-3">Editar Atendimento</h1>
 
   <div class="card">
-    <div class="card-header">
-      <h5 class="card-title">Edição de Atendimento</h5>
-      <h6 class="card-subtitle text-muted">Atualize os dados do atendimento</h6>
+ <div class="card-header py-3">
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+    <!-- LADO ESQUERDO -->
+    <div>
+
+      <div class="d-flex align-items-center">
+
+        <i class="fas fa-file-signature text-primary fs-5 me-2"></i>
+
+        <span class="text-muted">
+          Nº do Atendimento:
+        </span>
+
+        <span class="ms-2 fw-bold fs-5 text-primary">
+
+          <i class="fas fa-hashtag me-1"></i>
+
+          {{ atendimento?.numeroControle }}
+
+        </span>
+
+      </div>
+
+      <div
+        class="text-muted small mt-2"
+        *ngIf="atendimento?.usuarioCadastroNome">
+
+        <i class="fas fa-user-circle me-1"></i>
+
+        Criado por
+
+        <strong class="ms-1">
+          {{ atendimento?.usuarioCadastroNome }}
+        </strong>
+
+      </div>
+
     </div>
+
+    <!-- LADO DIREITO -->
+    <button
+      type="button"
+      class="btn btn-light bg-white border"
+      (click)="abrirHistoricoProcesso(id)">
+
+      <i class="fas fa-history me-2"></i>
+
+      Histórico
+
+    </button>
+
+  </div>
+
+</div>
+
 
     <div class="card-body">
 
@@ -13,26 +66,22 @@
       <app-spinner *ngIf="carregando" [show]="true" message="Atualizando..."></app-spinner>
 
       <!-- ALERTAS -->
-      <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
-        tipo="success">
-      </app-alerts>
+     <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
+                tipo="success" icone="fas fa-check-circle">
+            </app-alerts>
 
-      <app-alerts *ngIf="!carregando && mensagemErro.length" titulo="Erro!" [mensagens]="mensagemErro" tipo="danger">
-      </app-alerts>
+            <app-alerts *ngIf="!carregando && mensagemErro.length" titulo="Erro!" [mensagens]="mensagemErro"
+                tipo="danger" icone="fas fa-times-circle">
+            </app-alerts>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
         <!-- ================= DADOS DO ATENDIMENTO ================= -->
-        <h5 class="mb-3">Dados do Atendimento</h5>
+     
         <!-- ================= CLIENTES ================= -->
         <div class="d-flex justify-content-end mb-3">
 
-          <button type="button" class="btn btn-light bg-white border" (click)="abrirHistoricoProcesso(id)">
-
-            <i class="fas fa-history me-2"></i>
-            Histórico
-
-          </button>
+      
 
         </div>
         <div class="mb-3">

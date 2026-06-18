@@ -17,4 +17,6 @@ export interface ObterAtendimentoResponse {
   processoPasta?: string;
   casoPasta?: string;
   atendimentoAssunto?: string;
+  numeroControle?: string;
+usuarioCadastroNome?: string;
 }

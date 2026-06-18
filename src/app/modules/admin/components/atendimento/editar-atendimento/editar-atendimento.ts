@@ -118,6 +118,7 @@ private carregandoFormulario = false;
   id!: string;
 
   carregandoInicial = true;
+  atendimento?: ObterAtendimentoResponse;
 vinculoAlterado = false;
   // =========================
   // VÍNCULO
@@ -280,7 +281,7 @@ this.filtroVinculo.setValue('', {
     .subscribe({
 
       next: (res: ObterAtendimentoResponse) => {
-
+this.atendimento = res;
         this.carregandoFormulario = true;
 
         // =========================

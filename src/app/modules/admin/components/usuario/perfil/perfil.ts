@@ -24,7 +24,7 @@ import { EditarUsuarioRequest } from '../../../../../core/models/usuario/editar-
 
 import { environment } from '../../../../../../environments/environment.development';
 import { PerfilUsuarioResponse } from '../../../../../core/models/perfil/perfil-usuario-response';
-
+import { finalize } from 'rxjs/operators';
 @Component({
   selector: 'app-perfil',
   standalone: false,
@@ -120,106 +120,70 @@ usuario!: PerfilUsuarioResponse;
 
   ngOnInit(): void {
 
-    this.carregandoConsulta = true;
+  this.carregandoConsulta = true;
 
-    this.usuarioLogado = this.authHelper.get();
+  this.usuarioLogado = this.authHelper.get();
 
-    console.log(
-      'USUARIO LOGADO:',
-      this.usuarioLogado
-    );
+  console.log('USUÁRIO LOGADO:', this.usuarioLogado);
 
-    if (!this.usuarioLogado?.idUsuario) {
+  if (!this.usuarioLogado?.idUsuario) {
 
-      this.mensagemErro.push(
-        'Usuário não autenticado.'
-      );
+    this.mensagemErro.push('Usuário não autenticado.');
 
-      this.carregandoConsulta = false;
+    this.carregandoConsulta = false;
 
-      return;
-    }
-
-    this.usuarioService
-      .consultarPerfilUsuarioPorId(
-        this.usuarioLogado.idUsuario
-      )
-      .subscribe({
-
-        next: (response) => {
-
-          console.log(
-            'RESPONSE PERFIL:',
-            response
-          );
-
-          const usuario = response;
-
-          this.usuario = usuario;
-
-          this.setores =
-            usuario.grupoSetores ?? [];
-
-          this.niveis =
-            usuario.grupoNiveis ?? [];
-
-          this.fotoUsuario =
-            usuario?.foto?.fileUrl
-              ? `${environment.apiDeslandes}${usuario.foto.fileUrl}`
-              : 'assets/appdeslandes/img/default-avatar.jpg';
-
-          this.form.patchValue({
-
-            id: usuario.id,
-
-            nomeUsuario:
-              usuario.nomeUsuario,
-
-            login:
-              usuario.login,
-
-            dataCadastro:
-              usuario.dataCadastro,
-
-            email:
-              usuario.email,
-
-            endereco:
-              usuario.endereco,
-
-            telefone:
-              usuario.telefone,
-
-            genero:
-              usuario.genero
-
-          });
-
-          console.log(
-            'FORM ID:',
-            this.form.value.id
-          );
-
-          this.cd.detectChanges();
-
-          this.carregandoConsulta = false;
-        },
-
-        error: (err) => {
-
-          console.error(
-            'ERRO PERFIL:',
-            err
-          );
-
-          this.mensagemErro.push(
-            'Erro ao carregar o perfil do usuário.'
-          );
-
-          this.carregandoConsulta = false;
-        }
-      });
+    return;
   }
+
+  this.usuarioService
+    .consultarPerfilUsuarioPorId(this.usuarioLogado.idUsuario)
+    .pipe(
+      finalize(() => {
+        this.carregandoConsulta = false;
+        this.cd.detectChanges();
+      })
+    )
+    .subscribe({
+
+      next: (response) => {
+
+        console.log('RESPONSE PERFIL:', response);
+
+        const usuario = response;
+
+        this.usuario = usuario;
+
+        this.setores = usuario.grupoSetores ?? [];
+        this.niveis = usuario.grupoNiveis ?? [];
+
+        this.fotoUsuario = usuario?.foto?.fileUrl
+          ? `${environment.apiDeslandes}${usuario.foto.fileUrl}`
+          : 'assets/appdeslandes/img/default-avatar.jpg';
+
+        this.form.patchValue({
+          id: usuario.id,
+          nomeUsuario: usuario.nomeUsuario,
+          login: usuario.login,
+          dataCadastro: usuario.dataCadastro,
+          email: usuario.email,
+          endereco: usuario.endereco,
+          telefone: usuario.telefone,
+          genero: usuario.genero
+        });
+
+        console.log('FORM ID:', this.form.value.id);
+      },
+
+      error: (err) => {
+
+        console.error('ERRO PERFIL:', err);
+
+        this.mensagemErro = [
+          'Erro ao carregar o perfil do usuário.'
+        ];
+      }
+    });
+}
 
   abrirUpload(): void {
 
