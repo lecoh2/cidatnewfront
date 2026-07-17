@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, NgZone, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, debounceTime, filter, map, of, switchMap } from 'rxjs';
@@ -32,7 +32,8 @@ export class CriarUsuario implements OnInit {
   private builder = inject(FormBuilder);
   private router = inject(Router);
   private authHelper = inject(AuthHelper);
-
+private cdr = inject(ChangeDetectorRef);
+private zone = inject(NgZone);
   // --- Controles de autocomplete
 
 
@@ -174,95 +175,107 @@ export class CriarUsuario implements OnInit {
   }
 
   // --- Envio do formulário
-  onSubmit() {
-    this.carregando = true;
-    this.mensagemErro = [];
-    this.mensagemSucesso = [];
+onSubmit(): void {
 
-    if (!this.podeEnviar) {
-      this.mensagemErro = ['Preencha todos os campos obrigatórios corretamente.'];
+  this.carregando = true;
+  this.mensagemErro = [];
+  this.mensagemSucesso = [];
+
+  if (!this.podeEnviar) {
+    this.mensagemErro = ['Preencha todos os campos obrigatórios corretamente.'];
+    this.carregando = false;
+    return;
+  }
+
+  const request: CriarUsuarioRequest = {
+    nomeUsuario: this.form.value.nomeUsuario ?? undefined,
+    login: this.form.value.login ?? undefined,
+    email: this.form.value.email ?? undefined,
+    senha: this.form.value.senha ?? undefined,
+
+    grupoSetor: this.setorSelecionadas.map(s => ({
+      idSetor: s.idSetor!
+    })),
+
+    grupoNivel: this.niveisSelecionadas.map(n => ({
+      idNivel: n.idNivel!
+    }))
+  };
+
+  this.usuarioService.cadastrar(request).subscribe({
+
+    next: (response) => {
+
+      this.form.reset();
+
+      this.setorSelecionadas = [];
+      this.niveisSelecionadas = [];
+
+      this.setorControl.setValue('');
+      this.niveisControl.setValue('');
+
       this.carregando = false;
-      return;
+
+      this.mensagemSucesso = [
+        response.message || 'Usuário cadastrado com sucesso!'
+      ];
+
+      // força atualizar a tela
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.router.navigate(['/admin/consultar-usuarios']);
+      }, 4000);
+    },
+
+    error: (e) => {
+      this.tratarErro(e);
     }
 
-    const request: CriarUsuarioRequest = {
-      nomeUsuario: this.form.value.nomeUsuario ?? undefined,
-      login: this.form.value.login ?? undefined,
-      email:this.form.value.email ?? undefined,
-      senha: this.form.value.senha ?? undefined,
-      grupoSetor: this.setorSelecionadas.map((s) => ({ idSetor: s.idSetor! })),
-      grupoNivel: this.niveisSelecionadas.map((n) => ({ idNivel: n.idNivel! })),
-    };
+  });
 
-    console.log('Objeto request enviado:', request);
-
-    this.usuarioService.cadastrar(request).subscribe({
-      next: (response) => {
-        this.carregando = false;
-        this.mensagemSucesso = [response.mensagem];
-        console.log('Usuário cadastrado:', response.dados);
-
-        // 🔹 Limpar formulário e seleções
-        this.form.reset();
-  
-        this.setorSelecionadas = [];
-        this.niveisSelecionadas = [];
-
-        // 🔹 Resetar controles de autocomplete
-   
-        this.setorControl.setValue('');
-        this.niveisControl.setValue('');
-        setTimeout(() => {
-          this.carregando = false;
-          this.mensagemSucesso = [response?.mensagem || 'Usuário cadastradO com sucesso!'];
-          this.router.navigate(['/admin/consultar-usuarios']);
-        }, 3000);
-      },
-      error: (e) => {
-        this.tratarErro(e);
-        this.carregando = false;
-      },
-    });
-  }
+}
 
 
   // --- Tratamento de erros do backend
-  private tratarErro(e: any) {
-    const errorResponse = e?.error;
+private tratarErro(e: any): void {
+
+  this.zone.run(() => {
+
     this.mensagemErro = [];
 
-    // 1️⃣ ModelState / FluentValidation
+    const errorResponse = e?.error;
+
     if (errorResponse?.errors) {
       for (const key in errorResponse.errors) {
-        if (Array.isArray(errorResponse.errors[key])) {
-          this.mensagemErro.push(...errorResponse.errors[key]);
-        }
+        this.mensagemErro.push(...errorResponse.errors[key]);
       }
     }
-    // 2️⃣ ApplicationException ou ValidationException
     else if (errorResponse?.mensagem) {
       this.mensagemErro.push(errorResponse.mensagem);
-
-      if (errorResponse.detalhes) this.mensagemErro.push(errorResponse.detalhes);
-      else if (errorResponse.Detalhes) this.mensagemErro.push(errorResponse.Detalhes);
     }
-    // 3️⃣ Exception.Message
+    else if (errorResponse?.message) {
+      this.mensagemErro.push(errorResponse.message);
+    }
     else if (errorResponse?.Message) {
       this.mensagemErro.push(errorResponse.Message);
-      if (errorResponse.inner) this.mensagemErro.push(errorResponse.inner);
     }
-    // 4️⃣ Caso nenhum dos anteriores
+    else if (typeof errorResponse === 'string') {
+      this.mensagemErro.push(errorResponse);
+    }
     else {
-      this.mensagemErro.push('Ocorreu um erro inesperado ao processar sua solicitação.');
+      this.mensagemErro.push('Erro inesperado.');
     }
 
-    // Garantir que o array não tenha duplicatas
     this.mensagemErro = Array.from(new Set(this.mensagemErro));
 
-    // Log para debugging
-    console.error('Erro recebido do backend:', e);
-  }
+    this.carregando = false;
 
+    console.log('ERRO BACKEND:', errorResponse);
+
+    this.cdr.detectChanges();
+  });
+}
   // Validator de senhas iguais
   validarSenhasIguais(): ValidatorFn {
     return (group: AbstractControl): ValidationErrors | null => {

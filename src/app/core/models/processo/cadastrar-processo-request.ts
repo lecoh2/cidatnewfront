@@ -1,6 +1,7 @@
 import { GrupoClienteRequest } from "../grupo-clientes/grupo-cliente-request ";
 import { GrupoEnvolvidosRequest } from "../grupo-envolvidos/grupo-envolvidos-request";
 import { GrupoEtiquetaRequest } from "../grupo-etiquetas/grupo-etiquetas";
+import { ProcessoDocumentoRequest } from "./processo-documento-request";
 
 export interface CadastrarProcessoRequest {
 
@@ -17,6 +18,11 @@ export interface CadastrarProcessoRequest {
   observacao?: string;
   instancia?: number;
   acesso?: number;
+
+    estagiarioResponsavelId?: string | null;
+
+  documentos?: ProcessoDocumentoRequest[];
+
 
   grupoCliente?: GrupoClienteRequest[];
   grupoEnvolvidos?: GrupoEnvolvidosRequest[];

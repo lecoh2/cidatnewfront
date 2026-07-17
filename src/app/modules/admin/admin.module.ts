@@ -50,6 +50,8 @@ import { DashboardLocalizacoes } from "./components/processo/dashboard/dashboard
 import { DashboardTimeline } from "./components/processo/dashboard/dashboard-timeline";
 
 import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbord-relatorio-mensal";
+import { EditarPessoaFisica } from "./components/pessoa/editar-pessoa-fisica/editar-pessoa-fisica";
+import { EditarPessoaJuridica } from "./components/pessoa/editar-pessoa-juridica/editar-pessoa-juridica";
 
 
 
@@ -61,6 +63,8 @@ import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbo
         AdminLayout,
         PainelPrincipal,
         CadastrarPessoas,
+        EditarPessoaFisica,
+        EditarPessoaJuridica,
         CadastrarEtiquetas,
         ConsultarPessoas,
         CadastrarProcesso,

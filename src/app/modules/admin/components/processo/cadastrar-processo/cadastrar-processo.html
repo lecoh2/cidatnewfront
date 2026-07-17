@@ -43,7 +43,7 @@
                 <div class="row mb-3">
                     <!-- CLIENTES -->
                     <div class="col-md-6">
-                        <app-autocomplete-pessoa label="Clientes *" placeholder="Digite o nome do cliente"
+                        <app-autocomplete-pessoa label="REQUERENTE *" placeholder="Digite o nome do REQUERENTE"
                             [resultados]="pessoasFiltradas" [(selecionadas)]="pessoasSelecionadas"
                             (buscar)="buscarPessoas($event)">
                         </app-autocomplete-pessoa>
@@ -105,7 +105,134 @@
                     </div>
                 </div>
 
+<div class="col-md-6 mb-3">
+  <label class="form-label">
+    Estagiário responsável
+  </label>
 
+  <select
+    class="form-select"
+    formControlName="estagiarioResponsavelId">
+
+    <option [ngValue]="null">
+      Selecione
+    </option>
+
+    <option
+      *ngFor="let estagiario of estagiarios"
+      [ngValue]="estagiario.id">
+
+      {{ estagiario.nomeUsuario }}
+      <span *ngIf="estagiario.login">
+        - {{ estagiario.login }}
+      </span>
+
+    </option>
+
+  </select>
+</div><div formArrayName="documentos">
+
+  <div
+    *ngFor="
+      let documento of documentos.controls;
+      let i = index
+    "
+    [formGroupName]="i"
+    class="row align-items-end mb-3">
+
+    <div class="col-md-5">
+      <label class="form-label">
+        Tipo de documento *
+      </label>
+
+      <select
+        class="form-select"
+        formControlName="tipoDocumento">
+
+        <option [ngValue]="null">
+          Selecione
+        </option>
+
+        <option
+          *ngFor="
+            let tipo of tiposDocumentos
+          "
+          [ngValue]="tipo.id">
+
+          {{ tipo.nome }}
+
+        </option>
+
+      </select>
+
+      <div
+        *ngIf="
+          documentoInvalido(
+            i,
+            'tipoDocumento'
+          )
+        "
+        class="text-danger">
+
+        Selecione o tipo do documento.
+
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <label class="form-label">
+        Número do documento *
+      </label>
+
+      <input
+        type="text"
+        class="form-control"
+        formControlName="numeroDocumento"
+        placeholder="Informe o número" />
+
+      <div
+        *ngIf="
+          documentoInvalido(
+            i,
+            'numeroDocumento'
+          )
+        "
+        class="text-danger">
+
+        Informe o número do documento.
+
+      </div>
+    </div>
+
+    <div class="col-md-2">
+    <div class="col-md-2 d-flex justify-content-end">
+
+    <button
+        type="button"
+        class="btn btn-sm btn-outline-danger rounded-circle"
+        (click)="removerDocumento(i)"
+        title="Excluir">
+
+        <i class="fas fa-trash"></i>
+
+    </button>
+
+</div>
+    </div>
+
+  </div>
+
+</div>
+
+<button
+    type="button"
+    class="btn btn-primary btn-sm px-3  shadow-sm"
+    (click)="adicionarDocumento()">
+
+    <i class="fas fa-plus me-2"></i>
+    Adicionar documento
+
+</button>
             <div class="row mb-3">
     <div class="col-md-12">
         <label class="form-label">

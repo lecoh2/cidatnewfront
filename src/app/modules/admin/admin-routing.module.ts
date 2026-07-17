@@ -33,6 +33,9 @@ import { ConsultarUsuarios } from "./components/usuario/consultar-usuarios/consu
 import { DetalhesProcesso } from "./components/processo/detalhes-processo/detalhes-processo";
 
 import { DashboardRelatorioMensal } from "./components/processo/dashboard/dashbord-relatorio-mensal";
+import { EditarPessoaFisica } from "./components/pessoa/editar-pessoa-fisica/editar-pessoa-fisica";
+import { EditarPessoaJuridica } from "./components/pessoa/editar-pessoa-juridica/editar-pessoa-juridica";
+
 //import { CriarUsuario } from "./components/usuario/criar-usuario/criar-usuario";
 
 
@@ -52,14 +55,28 @@ export const routes: Routes = [
                 path: 'cadastrar-pessoas',
                 component: CadastrarPessoas,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
             {
                 path: 'consultar-pessoas',
                 component: ConsultarPessoas,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
+
+            },
+               {
+                path: 'editar-pessoa-fisica/:id',
+                component: EditarPessoaFisica,
+                canActivate: [AuthGuard, NivelGuard],
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
+
+            },
+               {
+                path: 'editar-pessoa-juridica/:id',
+                component: EditarPessoaJuridica,
+                canActivate: [AuthGuard, NivelGuard],
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
             //processo
@@ -67,21 +84,21 @@ export const routes: Routes = [
                 path: 'cadastrar-processo',
                 component: CadastrarProcesso,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
              {
                 path: 'editar-processo/:id',
                 component: EditarProcesso,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
             {
                 path: 'consultar-processo',
                 component: ConsultarProcesso,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
 
@@ -89,7 +106,7 @@ export const routes: Routes = [
                 path: 'detalhes-processo/:id',
                 component: DetalhesProcesso,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
             //atendmento
@@ -97,19 +114,19 @@ export const routes: Routes = [
                 path: 'cadastrar-atendimento',
                 component: CadastrarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
             },
             {
                 path: 'consultar-atendimento',
                 component: ConsultarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             }, {
                 path: 'editar-atendimento/:id',
                 component: EditarAtendimento,
                 canActivate: [AuthGuard, NivelGuard],
-                data: { niveis: ['Super Administrador', 'Administrador', 'Administração', 'Coordenador', 'Conciliador', 'Estagiários'] }
+                data: { niveis: ['Super Administrador', 'Administrativo', 'Administrador', 'Coordenador', 'Conciliador', 'Estagiários'] }
 
             },
         

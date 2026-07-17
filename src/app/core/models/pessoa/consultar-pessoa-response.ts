@@ -3,7 +3,7 @@ import { ConsultarSexoResponse } from "../sexo/consutar-sexo-response";
 
 export interface ConsultarPessoaResponse {
 
-    idPessoa: string;
+    id: string;
     nome: string;
     profissao?:string;
     email?:string;

@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+
+import { ChangeDetectorRef, Component, inject, NgZone, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -54,7 +55,7 @@ export class EditarUsuario implements OnInit {
   private route = inject(ActivatedRoute);
   private authHelper = inject(AuthHelper);
   private cd = inject(ChangeDetectorRef);
-
+private zone = inject(NgZone);
   // =========================
   // ESTADOS
   // =========================
@@ -462,11 +463,7 @@ this.cd.detectChanges();
  this.usuarioService
   .editarPorId(request)
   .pipe(
-
     finalize(() => {
-
-      this.carregando = false;
-
       this.cd.detectChanges();
     })
   )
@@ -474,27 +471,20 @@ this.cd.detectChanges();
 
     next: (response) => {
 
-      console.log('RESPONSE:', response);
+      this.carregando = false;
 
       this.mensagemSucesso = [
-
-        response.message ??
-        'Usuário atualizado com sucesso!'
+        response.message ?? 'Usuário atualizado com sucesso!'
       ];
 
       this.cd.detectChanges();
 
       setTimeout(() => {
-
-        this.router.navigate([
-          '/admin/consultar-usuarios'
-        ]);
-
-      }, 3000);
+        this.router.navigate(['/admin/consultar-usuarios']);
+      }, 4000);
     },
 
     error: (e) => {
-
       this.tratarErro(e);
     }
   });
@@ -506,6 +496,8 @@ this.cd.detectChanges();
 
   private tratarErro(e: any): void {
 
+  this.zone.run(() => {
+
     const errorResponse = e?.error;
 
     this.mensagemErro = [];
@@ -514,40 +506,27 @@ this.cd.detectChanges();
 
       for (const key in errorResponse.errors) {
 
-        if (
-          Array.isArray(
-            errorResponse.errors[key]
-          )
-        ) {
-
-          this.mensagemErro.push(
-            ...errorResponse.errors[key]
-          );
+        if (Array.isArray(errorResponse.errors[key])) {
+          this.mensagemErro.push(...errorResponse.errors[key]);
         }
       }
     }
-
     else if (errorResponse?.mensagem) {
 
-      this.mensagemErro.push(
-        errorResponse.mensagem
-      );
+      this.mensagemErro.push(errorResponse.mensagem);
 
       if (errorResponse.detalhes) {
-
-        this.mensagemErro.push(
-          errorResponse.detalhes
-        );
+        this.mensagemErro.push(errorResponse.detalhes);
       }
     }
+    else if (errorResponse?.message) {
 
+      this.mensagemErro.push(errorResponse.message);
+    }
     else if (errorResponse?.Message) {
 
-      this.mensagemErro.push(
-        errorResponse.Message
-      );
+      this.mensagemErro.push(errorResponse.Message);
     }
-
     else {
 
       this.mensagemErro.push(
@@ -555,15 +534,16 @@ this.cd.detectChanges();
       );
     }
 
-    this.mensagemErro = [
-      ...new Set(this.mensagemErro)
-    ];
+    this.mensagemErro = [...new Set(this.mensagemErro)];
 
-    console.error(
-      'Erro recebido do backend:',
-      e
-    );
-  }
+    this.carregando = false;
+
+    console.error('Erro recebido do backend:', errorResponse);
+
+    // força a atualização da tela imediatamente
+    this.cd.detectChanges();
+  });
+}
 
   // =========================
   // VALIDAR SENHAS

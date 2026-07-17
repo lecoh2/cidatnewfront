@@ -11,7 +11,7 @@
 
             <app-spinner *ngIf="carregando" [show]="true" message="Carregando..."></app-spinner>
 
-              <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
+            <app-alerts *ngIf="!carregando && mensagemSucesso.length" titulo="Sucesso!" [mensagens]="mensagemSucesso"
                 tipo="success" icone="fas fa-check-circle">
             </app-alerts>
 
@@ -65,21 +65,62 @@
 
                 <!-- DADOS -->
                 <div class="row mb-3">
-                 
 
+                    <!-- RESPONSÁVEL -->
                     <div class="col-md-6">
-                        <label class="form-label">Estágiario</label>
-                        <select class="form-control" formControlName="usuarioResponsavelId">
-                            <option [ngValue]="null">Selecione</option>
-                            <option *ngFor="let user of responsaveis" [ngValue]="user.id">
-                                {{ user.nomeUsuario }}
+
+                        <label class="form-label">
+                            Usuário responsável
+                        </label>
+
+                        <select class="form-select" formControlName="usuarioResponsavelId">
+
+                            <option [ngValue]="null">
+                                Selecione
                             </option>
+
+                            <option *ngFor="let usuario of responsaveis" [ngValue]="usuario.id">
+
+                                {{ usuario.nomeUsuario }}
+
+                            </option>
+
                         </select>
+
                     </div>
+
+                    <!-- ESTAGIÁRIO -->
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Estagiário responsável
+                        </label>
+
+                        <select class="form-select" formControlName="estagiarioResponsavelId">
+
+                            <option [ngValue]="null">
+                                Selecione
+                            </option>
+
+                            <option *ngFor="let estagiario of estagiarios" [ngValue]="estagiario.id">
+
+                                {{ estagiario.nomeUsuario }}
+                                {{
+                                estagiario.login
+                                ? ' - ' + estagiario.login
+                                : ''
+                                }}
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
                 </div>
 
                 <!-- ================= LOCALIZAÇÃO (CORRIGIDO) ================= -->
-                <div class="row mb-3">
+                <div class="row mb-3 align-items-end">
 
                     <div class="col-md-3">
                         <label class="form-label">Tipo do Processo</label>
@@ -92,72 +133,189 @@
                             <option [ngValue]="4">RETORNO CORREÇÃO</option>
                         </select>
                     </div>
-              
+
                     <div class="col-md-6">
                         <label class="form-label">Localização Atual</label>
-
-
 
                         <select class="form-select" formControlName="novaLocalizacao">
                             <option [ngValue]="null">Selecione</option>
 
-                            <!-- CORRETO: usa "local" -->
                             <option *ngFor="let l of locais" [ngValue]="l.local">
                                 {{ l.local }}
                             </option>
 
                         </select>
-                        <div class="mt-3" *ngIf="localizacoesProcesso?.length">
+                    </div>
 
-                            <label class="form-label">Histórico de Localizações</label>
+                    <div class="col-md-3 d-grid">
 
-                            <ul class="list-group">
+                        <button type="button" class="btn btn-primary" [disabled]="!localizacoesProcesso?.length"
+                            (click)="abrirModalLocalizacoes()">
 
-                                <li class="list-group-item" *ngFor="let l of localizacoesProcesso">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Ver histórico de localizações
 
-                                    <div class="d-flex justify-content-between">
+                            <span *ngIf="localizacoesProcesso?.length" class="badge bg-danger ms-2">
 
-                                        <div>
-                                            <strong>{{ l.local }}</strong>
+                                {{ localizacoesProcesso.length }}
 
-                                            <div class="text-muted small">
-                                                {{ l.observacao || 'Sem observação' }}
-                                            </div>
-                                        </div>
+                            </span>
 
-                                        <div class="text-end">
+                        </button>
 
-                                            <span *ngIf="l.atual" class="badge bg-success">
-                                                Atual
-                                            </span>
+                    </div>
 
-                                            <div class="small text-muted">
-                                                {{ l.dataSaida ? (l.dataSaida | date:'dd/MM/yyyy') : 'Em andamento' }}
-                                            </div>
+                </div>
+                <!-- ================= DOCUMENTOS ================= -->
 
-                                        </div>
+                <div class="mt-4 mb-3">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="fas fa-file-alt text-primary me-2"></i>
+                                Documentos
+                            </h5>
+
+                            <small class="text-muted">
+                                Parecer, despacho, TCE e ofício.
+                            </small>
+                        </div>
+
+<button
+    type="button"
+    class="btn btn-primary btn-sm px-3  shadow-sm"
+    (click)="adicionarDocumento()">
+
+    <i class="fas fa-plus me-2"></i>
+    Adicionar documento
+
+</button>
+
+                    </div>
+
+                    <div formArrayName="documentos">
+
+                      <div
+    *ngIf="documentos.length === 0"
+    class="alert alert-info border-0 shadow-sm d-flex align-items-center p-3"
+    role="alert">
+
+    <div class="me-3">
+
+        <i class="fas fa-folder-open fa-2x text-info"></i>
+
+    </div>
+
+    <div>
+
+        <h6 class="mb-1 fw-bold">
+            Nenhum documento informado
+        </h6>
+
+        <span class="text-muted">
+            Adicione pareceres, despachos, TCEs ou ofícios para manter o histórico completo deste processo.
+        </span>
+
+    </div>
+
+</div>
+
+                        <div *ngFor="
+        let documento of documentos.controls;
+        let i = index
+      " [formGroupName]="i" class="card border shadow-none mb-3">
+
+                            <div class="card-body">
+
+                                <div class="row align-items-end">
+
+                                    <!-- TIPO -->
+                                    <div class="col-md-5">
+
+                                        <label class="form-label">
+                                            Tipo do documento *
+                                        </label>
+
+                                        <select class="form-select" formControlName="tipoDocumento">
+
+                                            <option [ngValue]="null">
+                                                Selecione
+                                            </option>
+
+                                            <option *ngFor="let tipo of tiposDocumentos" [ngValue]="tipo.id">
+
+                                                {{ tipo.nome }}
+
+                                            </option>
+
+                                        </select>
+
+                                        <small *ngIf="
+                documentoInvalido(
+                  i,
+                  'tipoDocumento'
+                )
+              " class="text-danger">
+
+                                            Selecione o tipo do documento.
+
+                                        </small>
 
                                     </div>
 
-                                </li>
+                                    <!-- NÚMERO -->
+                                    <div class="col-md-5">
 
-                            </ul>
+                                        <label class="form-label">
+                                            Número do documento *
+                                        </label>
 
-                        </div> <!-- MOSTRA ATUAL DO PROCESSO -->
+                                        <input type="text" class="form-control" formControlName="numeroDocumento"
+                                            placeholder="Informe o número do documento" />
 
-                    </div>
-                          <div class="col-md-3">
-                        <div class="mb-2 text-muted small">
-                            Atual:<br><br>
-                            <strong>
-                                {{
-                                form.value.novaLocalizacao || 'Não definida'
-                                }}
-                            </strong>
+                                        <small *ngIf="
+                documentoInvalido(
+                  i,
+                  'numeroDocumento'
+                )
+              " class="text-danger">
+
+                                            Informe o número do documento.
+
+                                        </small>
+
+                                    </div>
+
+                                    <!-- REMOVER -->
+                                    <div class="col-md-2">
+
+                                   <div class="col-md-2 d-flex justify-content-end">
+
+    <button
+        type="button"
+        class="btn btn-sm btn-outline-danger rounded-circle"
+        (click)="removerDocumento(i)"
+        title="Excluir">
+
+        <i class="fas fa-trash"></i>
+
+    </button>
+
+</div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
                         </div>
-                    </div>
-                </div>
 
+                    </div>
+
+                </div>
                 <!-- TIPO PROCESSO -->
                 <div class="row mb-3">
 
@@ -190,24 +348,18 @@
 
 
                 <!-- BOTÕES -->
-               <div class="mt-3">
-    <button
-        type="button"
-        class="btn btn-secondary me-2"
-        (click)="irParaLista()">
-        Voltar
-    </button>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-secondary me-2" (click)="irParaLista()">
+                        Voltar
+                    </button>
 
-    <button
-        type="submit"
-        class="btn btn-primary"
-        [disabled]="!podeEnviar || carregando">
+                    <button type="submit" class="btn btn-primary" [disabled]="!podeEnviar || carregando">
 
-        <i class="align-middle me-2 fas fa-save fa-lg"></i>
-        Atualizar Processo
+                        <i class="align-middle me-2 fas fa-save fa-lg"></i>
+                        Atualizar Processo
 
-    </button>
-</div>
+                    </button>
+                </div>
 
 
             </form>
@@ -283,6 +435,325 @@
                         </li>
 
                     </ul>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div #modalLocalizacoes class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
+
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+            <div class="modal-content">
+
+                <div class="modal-header  text-white">
+
+                    <div>
+                        <h5 class="modal-title mb-1">
+
+                            <i class="fas fa-route me-2"></i>
+
+                            Histórico de Localizações
+
+                        </h5>
+
+                        <small class="opacity-75">
+                            Acompanhe toda a movimentação do processo
+                        </small>
+                    </div>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar">
+                    </button>
+
+                </div>
+
+                <div class="modal-body ">
+
+                    <div *ngIf="!localizacoesProcesso?.length"
+                        class="alert alert-warning d-flex align-items-center mb-0">
+
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+
+                        Nenhuma localização encontrada para este processo.
+
+                    </div>
+
+                    <div *ngIf="localizacoesProcesso?.length" class="position-relative">
+
+                        <div *ngFor="
+        let localizacao of localizacoesOrdenadas;
+        let i = index;
+        let ultimo = last
+      " class="position-relative ps-5 pb-4">
+
+                            <!-- LINHA VERTICAL -->
+                            <div *ngIf="!ultimo" class="position-absolute bg-secondary opacity-25" style="
+          left: 18px;
+          top: 42px;
+          bottom: 0;
+          width: 2px;
+        ">
+                            </div>
+
+                            <!-- ÍCONE DA LINHA DO TEMPO -->
+                            <div class="position-absolute top-0 start-0 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                [ngClass]="
+          localizacao.atual
+            ? 'bg-success text-white'
+            : 'bg-white text-primary border'
+        " style="
+          width: 38px;
+          height: 38px;
+          z-index: 2;
+        ">
+
+                                <i class="fas" [ngClass]="
+            localizacao.atual
+              ? 'fa-map-marker-alt'
+              : 'fa-route'
+          ">
+                                </i>
+
+                            </div>
+
+                            <!-- CARD -->
+                            <div class="card border-0 shadow-sm" [ngClass]="{
+          'border-start border-success border-4':
+            localizacao.atual,
+
+          'border-start border-primary border-4':
+            !localizacao.atual
+        }">
+
+                                <div class="card-body">
+
+                                    <!-- CABEÇALHO -->
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+
+                                        <div>
+
+                                            <h5 class="mb-1 d-flex align-items-center">
+
+                                                <i class="fas me-2" [ngClass]="
+                    localizacao.atual
+                      ? 'fa-location-dot text-success'
+                      : 'fa-map-signs text-primary'
+                  ">
+                                                </i>
+
+                                                {{ localizacao.local }}
+
+                                            </h5>
+
+                                            <span class="badge" [ngClass]="
+                  localizacao.atual
+                    ? 'bg-success'
+                    : 'bg-secondary'
+                ">
+
+                                                <i class="fas me-1" [ngClass]="
+                    localizacao.atual
+                      ? 'fa-circle-check'
+                      : 'fa-clock-rotate-left'
+                  ">
+                                                </i>
+
+                                                {{
+                                                localizacao.atual
+                                                ? 'Localização atual'
+                                                : 'Localização anterior'
+                                                }}
+
+                                            </span>
+
+                                        </div>
+
+                                        <span class="text-muted small">
+
+                                            <i class="fas fa-hashtag me-1"></i>
+
+                                            Movimentação {{ i + 1 }}
+
+                                        </span>
+
+                                    </div>
+
+                                    <!-- OBSERVAÇÃO -->
+                                    <div class="alert  d-flex align-items-start py-2 mb-3">
+
+                                        <i class="fas fa-comment-alt text-muted me-2 mt-1"></i>
+
+                                        <div>
+                                            <small class="text-muted d-block">
+                                                Observação
+                                            </small>
+
+                                            <span>
+                                                {{
+                                                localizacao.observacao
+                                                || 'Sem observação'
+                                                }}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- DATAS E USUÁRIOS -->
+                                    <div class="row g-3">
+
+                                        <!-- ENTRADA -->
+                                        <div class="col-md-6">
+
+                                            <div class="d-flex align-items-start">
+
+                                                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3"
+                                                    style="
+                    min-width: 36px;
+                    width: 36px;
+                    height: 36px;
+                  ">
+
+                                                    <i class="fas fa-sign-in-alt"></i>
+
+                                                </div>
+
+                                                <div>
+
+                                                    <small class="text-muted d-block">
+                                                        Entrada
+                                                    </small>
+
+                                                    <strong>
+                                                        {{
+                                                        localizacao.dataCadastro
+                                                        ? (
+                                                        localizacao.dataCadastro
+                                                        | date:'dd/MM/yyyy HH:mm'
+                                                        )
+                                                        : 'Não informada'
+                                                        }}
+                                                    </strong>
+
+                                                    <div class="small text-muted mt-1">
+
+                                                        <i class="fas fa-user me-1"></i>
+
+                                                        {{
+                                                        localizacao.usuarioCriacaoNome
+                                                        || 'Usuário não informado'
+                                                        }}
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- SAÍDA -->
+                                        <div class="col-md-6">
+
+                                            <div class="d-flex align-items-start">
+
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                                    [ngClass]="
+                    localizacao.dataSaida
+                      ? 'bg-danger-subtle text-danger'
+                      : 'bg-success-subtle text-success'
+                  " style="
+                    min-width: 36px;
+                    width: 36px;
+                    height: 36px;
+                  ">
+
+                                                    <i class="fas" [ngClass]="
+                      localizacao.dataSaida
+                        ? 'fa-sign-out-alt'
+                        : 'fa-hourglass-half'
+                    ">
+                                                    </i>
+
+                                                </div>
+
+                                                <div>
+
+                                                    <small class="text-muted d-block">
+                                                        Saída
+                                                    </small>
+
+                                                    <strong>
+                                                        {{
+                                                        localizacao.dataSaida
+                                                        ? (
+                                                        localizacao.dataSaida
+                                                        | date:'dd/MM/yyyy HH:mm'
+                                                        )
+                                                        : 'Em andamento'
+                                                        }}
+                                                    </strong>
+
+                                                    <div *ngIf="localizacao.dataSaida" class="small text-muted mt-1">
+
+                                                        <i class="fas fa-user-check me-1"></i>
+
+                                                        {{
+                                                        localizacao.usuarioSaidaNome
+                                                        || 'Usuário não informado'
+                                                        }}
+
+                                                    </div>
+
+                                                    <div *ngIf="!localizacao.dataSaida" class="small text-success mt-1">
+
+                                                        <i class="fas fa-circle-notch fa-spin me-1"></i>
+
+                                                        Processo permanece neste local
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <span class="text-muted me-auto">
+
+                        <i class="fas fa-list-ol me-1"></i>
+
+                        Total de movimentações:
+                        <strong>
+                            {{ localizacoesProcesso.length }}
+                        </strong>
+
+                    </span>
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+
+                        <i class="fas fa-times me-2"></i>
+
+                        Fechar
+
+                    </button>
 
                 </div>
 

@@ -433,62 +433,78 @@ export class CadastrarPessoas implements OnInit {
   }
 
   // ================== Tipo Pessoa ==================
-  onTipoPessoaChange(tipo: TipoPessoa): void {
-    this.tipoPessoaSelecionado = tipo;
+ onTipoPessoaChange(tipo: TipoPessoa): void {
+  this.tipoPessoaSelecionado = tipo;
 
-    if (tipo === TipoPessoa.Fisica) {
+  // obrigatórios comuns
+  this.setRequired('nome', true);
+  this.setRequired('telefone', true);
 
-      //  Física obrigatórios
-      this.setRequired('cpf', true);
+  if (tipo === TipoPessoa.Fisica) {
+    // Pessoa Física obrigatórios
+    this.setRequired('cpf', true);
 
-      //  Jurídica não obrigatórios
-      this.setRequired('cnpj', false);
-      this.setRequired('inscricaoEstadual', false);
-      this.setRequired('inscricaoMunicipal', false);
+    // Endereço obrigatório para PF
+    this.setRequired('endereco.cep', true);
+    this.setRequired('endereco.logradouro', true);
+    this.setRequired('endereco.numero', true);
+    this.setRequired('endereco.bairro', true);
+    this.setRequired('endereco.localidade', true);
+    this.setRequired('endereco.uf', true);
 
-      // Limpa Jurídica
-      this.form.patchValue({
-        cnpj: '',
-        inscricaoEstadual: '',
-        inscricaoMunicipal: ''
-      });
+    // Pessoa Jurídica não obrigatórios
+    this.setRequired('cnpj', false);
+    this.setRequired('inscricaoMunicipal', false);
+    this.setRequired('inscricaoEstadual', false);
 
-    } else {
+    this.form.patchValue({
+      cnpj: '',
+      inscricaoEstadual: '',
+      inscricaoMunicipal: ''
+    });
 
-      //  Jurídica obrigatórios
-      this.setRequired('cnpj', true);
+  } else {
+    // Pessoa Jurídica obrigatórios
+    this.setRequired('cnpj', true);
+    this.setRequired('inscricaoMunicipal', true);
 
-      //  Física não obrigatórios
-      this.setRequired('cpf', false);
+    // Endereço não obrigatório para PJ
+    this.setRequired('endereco.cep', false);
+    this.setRequired('endereco.logradouro', false);
+    this.setRequired('endereco.numero', false);
+    this.setRequired('endereco.bairro', false);
+    this.setRequired('endereco.localidade', false);
+    this.setRequired('endereco.uf', false);
 
-      // Limpa Física
-      this.form.patchValue({
-        cpf: '',
+    // Pessoa Física não obrigatórios
+    this.setRequired('cpf', false);
 
-        rg: '',
-        tituloEleitor: '',
-        carteiraTrabalho: '',
-        pisPasep: '',
-        cnh: '',
-        passaporte: '',
-        certidaoReservista: ''
-      });
-    }
-
-    this.form.updateValueAndValidity();
+    this.form.patchValue({
+      cpf: '',
+      rg: '',
+      tituloEleitor: '',
+      carteiraTrabalho: '',
+      pisPasep: '',
+      cnh: '',
+      passaporte: '',
+      certidaoReservista: ''
+    });
   }
-  private setRequired(campo: string, required: boolean): void {
-    const control = this.form.get(campo);
-    if (!control) return;
 
-    if (required) {
-      control.setValidators(Validators.required);
-    } else {
-      control.clearValidators();
-    }
+  this.form.updateValueAndValidity();
+}
+private setRequired(campo: string, required: boolean): void {
+  const control = this.form.get(campo);
+  if (!control) return;
 
-    control.updateValueAndValidity();
+  if (required) {
+    control.setValidators(Validators.required);
+  } else {
+    control.clearValidators();
   }
+
+  control.updateValueAndValidity();
+}
   // ================== Submit ==================
   onSubmit(): void {
     this.mensagemErro = [];

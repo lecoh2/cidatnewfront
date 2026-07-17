@@ -4,4 +4,5 @@ export interface ProcessoLocalPadraoResponse {
   observacao?: string;
   dataSaida?: string;
   atual: boolean;
+  
 }

@@ -1,409 +1,601 @@
-/*import { Component, inject, OnInit } from '@angular/core';
-import { PessoaService } from '../../../../../core/services/pessoa.service';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { PessoaService } from '../../../../../core/services/pessoa.service';
+import { CepService } from '../../../../../core/services/cep.service';
 import { AuthHelper } from '../../../../../core/helpers/auth.helper';
 
-import { CepService } from '../../../../../core/services/cep.service';
-
 import { AutenticarUsuarioResponse } from '../../../../../core/models/usuario/autenticar-usuario.response';
-import { EditarPessoaJuridicaRequest } from '../../../../../core/models/pessoa/editar-pessoa-juridica-request';
-import { ConsultarHistoricoPessoaJuridicaResponse } from '../../../../../core/models/pessoa/consultar-historico-pessoa-juridica-response';
+
+import { EnderecoRequest } from '../../../../../core/models/endereco/endereco-request';
+import { InformacoesComplementaresRequest } from '../../../../../core/models/informacoes-complementares/informacoes-complementares-request';
+
+import { limparNull } from '../../../../../core/utils/limpar-null';
+import { PessoaJuridicaUpdateRequest } from '../../../../../core/models/pessoa/pessoa-juridica-update-request';
+import { finalize } from 'rxjs';
 
 @Component({
-  selector: 'app-editar-pessoa',
+  selector: 'app-editar-pessoa-juridica',
   standalone: false,
-  templateUrl: './editar-pessoa-juridica.component.html',
-  styleUrl: './editar-pessoa-juridica.component.css'
+  templateUrl: './editar-pessoa-juridica.html',
+  styleUrls: ['./editar-pessoa-juridica.css']
 })
-export class EditarPessoaJuridicaComponent implements OnInit {
+export class EditarPessoaJuridica implements OnInit {
+
   private pessoaService = inject(PessoaService);
   private builder = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private authHelper = inject(AuthHelper);
   private cepService = inject(CepService);
-  private route = inject(ActivatedRoute);
+private cdr = inject(ChangeDetectorRef);
+  idPessoa = '';
 
   usuarioLogado?: AutenticarUsuarioResponse | null;
-  historicoPessoa: ConsultarHistoricoPessoaJuridicaResponse[] = [];
-  //atributos
-  idPessoa: string = '';
-  nome: string = '';
-  anoBaseTriagem: string = '';
-  telefone: string = '';
-  email: string = '';
-  cnpj: string = '';
-  inscricaoMunicipal: string = '';
-  inscricaoEstadual: string = '';
-  logradouro: string = '';
-  numero: string = '';
-  complemento: string = '';
-  bairro: string = '';
-  localidade: string = '';
-  uf: string = '';
-  cep: string = '';
+
   mensagemErro: string[] = [];
   mensagemAviso: string[] = [];
   mensagemSucesso: string[] = [];
 
   carregando = false;
+  carregandoHistorico = false;
 
-  temMascaraDupla = true;
+  step = 1;
+
+  historicoPessoa: any[] = [];
 
   form = this.builder.group({
-    idPessoa: new FormControl('', [Validators.required]),
-    nome: new FormControl('', [Validators.required]),
-    telefone: new FormControl('', [Validators.required]),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    cnpj: new FormControl('', [Validators.required]),
-    inscricaoEstadual: new FormControl(''),
-    inscricaoMunicipal: new FormControl(''),
-    logradouro: new FormControl('', [Validators.required]),
-    numero: new FormControl('', [Validators.required]),
-    complemento: new FormControl('',),
-    bairro: new FormControl('', [Validators.required]),
-    localidade: new FormControl('', [Validators.required]),
-    uf: new FormControl('', [Validators.required]),
-    cep: new FormControl('',),
-    idUsuario: new FormControl('', [Validators.required]),
-    observacoes: new FormControl('', Validators.required)
-  });
-  limitarUf(valor: string): string {
-    if (!valor) return '';
-    valor = valor.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 2);
-    return valor;
-  }
+    nome: ['', Validators.required],
+    apelido: [''],
+    telefone: ['', Validators.required],
+    email: [''],
+    site: [''],
 
-  onBlurUf(): void {
-    const valor = this.form.get('uf')?.value || '';
-    const ufLimitada = this.limitarUf(valor);
-    this.form.get('uf')?.setValue(ufLimitada);
-  }
+    cnpj: ['', Validators.required],
+    inscricaoEstadual: [''],
+    inscricaoMunicipal: ['', Validators.required],
+    simplesNacional: [null as number | null],
+
+    idUsuario: [''],
+    observacoes: ['', Validators.required],
+
+    endereco: this.builder.group({
+      logradouro: [''],
+      numero: [''],
+      complemento: [''],
+      bairro: [''],
+      localidade: [''],
+      uf: [''],
+      cep: ['']
+    }),
+
+    informacoesComplementares: this.builder.group({
+      dataNascimento: [''],
+      nomeEmpresa: [''],
+      profissao: [''],
+      atividadeEconomica: [''],
+      estadoCivil: [''],
+      codigo: [''],
+      nomePai: [''],
+      nomeMae: [''],
+      naturalidade: [''],
+      nacionalidade: [''],
+      comentario: ['']
+    })
+  });
 
   ngOnInit(): void {
+    this.mensagemErro = [];
     this.carregando = true;
-    // Carrega os tipos de sexo
 
-    // Recupera usuário logado via AuthHelper
     this.usuarioLogado = this.authHelper.get();
 
-    if (this.usuarioLogado) {
-      this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
+    if (this.usuarioLogado?.idUsuario) {
+      this.form.get('idUsuario')?.setValue(
+        this.usuarioLogado.idUsuario
+      );
     }
 
     const id = this.route.snapshot.paramMap.get('id');
 
-    if (id) {
-      this.idPessoa = id;
-      this.pessoaService.consultarPessoaJuridicaPorId(id).subscribe({
-        next: (response) => {
-          console.log('Dados recebidos da API:', response);
-          this.form.patchValue({
-            idPessoa: response.idPessoa,
-            nome: response.nome,
-            telefone: response.telefone,
-            email: response.email,
-            cnpj: response.cnpj,
-            inscricaoEstadual: response.inscricaoEstadual,
-            inscricaoMunicipal: response.inscricaoMunicipal,
-            logradouro: response.endereco?.logradouro,
-            numero: response.endereco?.numero,
-            complemento: response.endereco?.complemento,
-            bairro: response.endereco?.bairro,
-            localidade: response.endereco?.localidade,
-            uf: response.endereco?.uf,
-            cep: response.endereco?.cep,
-            //idUsuario: response.usuario?.idUsuario,
-          });
-        },
-        error: (err) => {
-          this.tratarErro(err);
-        },
-        complete: () => {
-          this.carregando = false;
-        }
-      });
-    } else {
+    if (!id) {
+      this.mensagemErro = [
+        'Não foi possível identificar a pessoa jurídica.'
+      ];
+
       this.carregando = false;
+      return;
     }
+
+    this.idPessoa = id;
+    this.carregarPessoa(id);
   }
 
+  private carregarPessoa(id: string): void {
+    this.pessoaService
+      .consultarPessoaJuridicaPorId(id)
+      .subscribe({
+        next: response => {
+          const pessoa = response.data;
 
-  buscarCep() {
+          if (!pessoa) {
+            this.mensagemErro = [
+              'Pessoa jurídica não encontrada.'
+            ];
+
+            this.carregando = false;
+            return;
+          }
+
+          this.form.patchValue({
+            nome: pessoa.nome ?? '',
+            apelido: pessoa.apelido ?? '',
+            telefone: pessoa.telefone ?? '',
+            email: pessoa.email ?? '',
+            site: pessoa.site ?? '',
+
+            cnpj: pessoa.cnpj ?? '',
+            inscricaoEstadual:
+              pessoa.inscricaoEstadual ?? '',
+            inscricaoMunicipal:
+              pessoa.inscricaoMunicipal ?? '',
+            simplesNacional:
+              pessoa.simplesNacional ?? null,
+
+            endereco: {
+              logradouro:
+                pessoa.endereco?.logradouro ?? '',
+              numero:
+                pessoa.endereco?.numero ?? '',
+              complemento:
+                pessoa.endereco?.complemento ?? '',
+              bairro:
+                pessoa.endereco?.bairro ?? '',
+              localidade:
+                pessoa.endereco?.localidade ?? '',
+              uf:
+                pessoa.endereco?.uf ?? '',
+              cep:
+                pessoa.endereco?.cep ?? ''
+            },
+
+            informacoesComplementares: {
+              dataNascimento:
+                pessoa.informacoesComplementares
+                  ?.dataNascimento ?? '',
+
+              nomeEmpresa:
+                pessoa.informacoesComplementares
+                  ?.nomeEmpresa ?? '',
+
+              profissao:
+                pessoa.informacoesComplementares
+                  ?.profissao ?? '',
+
+              atividadeEconomica:
+                pessoa.informacoesComplementares
+                  ?.atividadeEconomica ?? '',
+
+              estadoCivil:
+                pessoa.informacoesComplementares
+                  ?.estadoCivil ?? '',
+
+              codigo:
+                pessoa.informacoesComplementares
+                  ?.codigo ?? '',
+
+              nomePai:
+                pessoa.informacoesComplementares
+                  ?.nomePai ?? '',
+
+              nomeMae:
+                pessoa.informacoesComplementares
+                  ?.nomeMae ?? '',
+
+              naturalidade:
+                pessoa.informacoesComplementares
+                  ?.naturalidade ?? '',
+
+              nacionalidade:
+                pessoa.informacoesComplementares
+                  ?.nacionalidade ?? '',
+
+              comentario:
+                pessoa.informacoesComplementares
+                  ?.comentario ?? ''
+            }
+          });
+
+          this.carregando = false;
+        },
+        error: err => {
+          this.tratarErro(err);
+        }
+      });
+  }
+
+  irParaStep(step: number): void {
+    this.step = step;
+  }
+
+  onSubmit(): void {
     this.mensagemErro = [];
-      this.mensagemAviso = [];
-    const cep = this.form.get('cep')?.value?.replace(/\D/g, '');
+    this.mensagemAviso = [];
+    this.mensagemSucesso = [];
 
-    if (!cep || cep.length !== 8) {
-      this.mensagemAviso.push('O CEP deve conter 8 dígitos ou deixar vazio para caso for em audiência');
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+
+      this.mensagemErro = [
+        'Preencha corretamente os campos obrigatórios.'
+      ];
+
+      return;
+    }
+
+    if (!this.idPessoa) {
+      this.mensagemErro = [
+        'Não foi possível identificar a pessoa jurídica.'
+      ];
+
+      return;
+    }
+
+    this.carregando = true;
+
+    const formValue = this.form.getRawValue();
+
+    const endereco = limparNull<EnderecoRequest>(
+      formValue.endereco ?? {}
+    );
+
+    const informacoesComplementares =
+      limparNull<InformacoesComplementaresRequest>(
+        formValue.informacoesComplementares ?? {}
+      );
+
+    const request: PessoaJuridicaUpdateRequest = {
+      nome:
+        formValue.nome?.trim() || undefined,
+
+      apelido:
+        formValue.apelido?.trim() || undefined,
+
+      telefone:
+        formValue.telefone?.trim() || undefined,
+
+      email:
+        formValue.email?.trim() || undefined,
+
+      site:
+        formValue.site?.trim() || undefined,
+
+      cnpj:
+        formValue.cnpj?.trim() || undefined,
+
+      inscricaoEstadual:
+        formValue.inscricaoEstadual?.trim() ||
+        undefined,
+
+      inscricaoMunicipal:
+        formValue.inscricaoMunicipal?.trim() ||
+        undefined,
+
+      simplesNacional:
+        formValue.simplesNacional ?? undefined,
+
+      idUsuario:
+        this.usuarioLogado?.idUsuario ??
+        undefined,
+
+      observacoes:
+        formValue.observacoes?.trim() ||
+        undefined,
+
+      endereco,
+      informacoesComplementares
+    };
+
+ this.pessoaService
+  .editarPessoaJuridica(
+    this.idPessoa,
+    request
+  )
+  .pipe(
+    finalize(() => {
+      this.carregando = false;
+      this.cdr.detectChanges();
+    })
+  )
+  .subscribe({
+    next: response => {
+      this.mensagemErro = [];
+      this.mensagemAviso = [];
+
+      this.mensagemSucesso = [
+        response.message
+      ];
+
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.router.navigate([
+          '/admin/consultar-pessoas'
+        ]);
+      }, 3000);
+    },
+
+    error: (err: HttpErrorResponse) => {
+      this.tratarErro(err);
+    }
+  });
+  }
+
+  buscarCep(): void {
+    this.mensagemErro = [];
+    this.mensagemAviso = [];
+
+    const cep = this.form
+      .get('endereco.cep')
+      ?.value
+      ?.replace(/\D/g, '');
+
+    if (!cep) {
+      return;
+    }
+
+    if (cep.length !== 8) {
+      this.mensagemAviso = [
+        'O CEP deve conter 8 dígitos.'
+      ];
+
       return;
     }
 
     this.cepService.buscarCep(cep).subscribe({
-      next: (endereco) => {
+      next: endereco => {
         if ((endereco as any).erro) {
-          this.mensagemErro.push('CEP não encontrado.');
+          this.mensagemErro = [
+            'CEP não encontrado.'
+          ];
+
           return;
         }
 
         this.form.patchValue({
-          logradouro: endereco.logradouro,
-          bairro: endereco.bairro,
-          localidade: endereco.localidade,
-          uf: endereco.uf
+          endereco: {
+            logradouro:
+              endereco.logradouro ?? '',
+            bairro:
+              endereco.bairro ?? '',
+            localidade:
+              endereco.localidade ?? '',
+            uf:
+              endereco.uf ?? ''
+          }
         });
       },
       error: () => {
-        this.mensagemErro.push('Erro ao buscar o CEP. Verifique sua conexão e tente novamente.');
+        this.mensagemErro = [
+          'Erro ao buscar o CEP.'
+        ];
       }
     });
   }
 
-
-  private setRequired(campo: string, required: boolean) {
-    const control = this.form.get(campo);
-    if (!control) return;
-
-    if (required) {
-      control.setValidators(Validators.required);
-    } else {
-      control.clearValidators();
+  limitarUf(valor: string): string {
+    if (!valor) {
+      return '';
     }
 
-    control.updateValueAndValidity();
+    return valor
+      .replace(/[^a-zA-Z]/g, '')
+      .toUpperCase()
+      .substring(0, 2);
   }
 
-  onSubmit() {
-    this.carregando = true;
-    this.mensagemErro = [];
-    this.mensagemSucesso = [];
+  onBlurUf(): void {
+    const controle = this.form.get('endereco.uf');
+    const valor = controle?.value || '';
 
-    const request: EditarPessoaJuridicaRequest = {
-      idPessoa: this.form.value.idPessoa!,
-      nome: this.form.value.nome!,
-      cnpj: this.form.value.cnpj!,
-      inscricaoEstadual: this.form.value.inscricaoEstadual?.trim() || 'Em audiência',
-      inscricaoMunicipal: this.form.value.inscricaoMunicipal!.trim() || 'Em audiência',
-      email: this.form.value.email!,
-      telefone: this.form.value.telefone!,
-      observacoes: this.form.value.observacoes!,
-      idUsuario: this.form.value.idUsuario!,
-      endereco: {
-        logradouro: this.form.value.logradouro!,
-        numero: this.form.value.numero!,
-        complemento: this.form.value.complemento!,
-        bairro: this.form.value.bairro!,
-        localidade: this.form.value.localidade!,
-        uf: this.form.value.uf!,
-        cep: this.form.value.cep!.trim() || 'Em audiência',
-      }
-    };
-
-
-    this.pessoaService.editarPessoaJuridica(request).subscribe({
-      next: (response) => {
-        this.form.reset();
-        this.mensagemErro = [];
-
-        this.mensagemSucesso = [response?.mensagem ?? 'Pessoa atualizada com sucesso.'];
-
-        this.carregando = false; // <-- Mostra a mensagem imediatamente
-
-        // Agora espera 3 segundos COM A MENSAGEM VISÍVEL e só depois redireciona
-        setTimeout(() => {
-          this.router.navigate(['/admin/consultar-pessoas']);
-        }, 3000);
-      },
-      error: (e) => {
-        this.mensagemErro = [];
-        const errorResponse = e.error;
-
-        if (errorResponse?.errors) {
-          for (const key in errorResponse.errors) {
-            if (Array.isArray(errorResponse.errors[key])) {
-              this.mensagemErro.push(...errorResponse.errors[key]);
-            }
-          }
-        } else if (errorResponse?.mensagem) {
-          this.mensagemErro.push(errorResponse.mensagem);
-          if (errorResponse.Detalhes) this.mensagemErro.push(errorResponse.Detalhes);
-        } else if (errorResponse?.Message) {
-          this.mensagemErro.push(errorResponse.Message);
-          if (errorResponse.inner) this.mensagemErro.push(errorResponse.inner);
-        } else {
-          this.mensagemErro.push('Ocorreu um erro inesperado ao processar sua solicitação.');
-        }
-
-        this.carregando = false;
-      }
-    });
+    controle?.setValue(
+      this.limitarUf(valor)
+    );
   }
 
+  formatarTelefonesEmLinha(
+    valor?: string
+  ): string {
+    if (!valor) {
+      return '';
+    }
 
-  carregandoHistorico = false;
-
-  abrirModalHistorico(): void {
-    if (!this.idPessoa) return;
-
-    this.carregandoHistorico = true;
-    console.log('Carregando histórico de pessoas:', this.idPessoa);
-
-    this.pessoaService.consultarHistoricoPessoaJuridica(this.idPessoa).subscribe({
-      next: (response) => {
-        console.log('Histórico Pessoa recebido:', response);
-
-        // Ajuste conforme o retorno real, pode ser direto array ou dentro de alguma propriedade
-        const listaHistoricos = (response as any).historicos || response || [];
-
-        this.historicoPessoa = listaHistoricos.map((item: any) => {
-          const dadosAntes = item.dadosAntes ? JSON.parse(item.dadosAntes) : {};
-          const dadosDepois = item.dadosDepois ? JSON.parse(item.dadosDepois) : {};
-
-          return {
-            idHistoricoPessoa: item.idHistoricoPessoa,
-            idPessoa: item.idPessoa,
-            idUsuario: item.idUsuario,
-            dataAlteracao: item.dataAlteracao,
-            tipoAlteracao: item.tipoAlteracao,
-            observacoes: item.observacoes,
-            dadosAntes: item.dadosAntes,
-            dadosDepois: item.dadosDepois,
-            dadosAntesObj: dadosAntes,
-            dadosDepoisObj: dadosDepois,
-            InscricaoMunicipal: item.InscricaoMunicipal,
-            InscricaoEstadual: item.InscricaoEstadual,
-
-
-
-            nomePessoa: dadosDepois.Nome || dadosAntes.Nome || 'Não informado',
-            cnpjPessoa: dadosDepois.Cnpj || dadosAntes.Cnpj || 'Não informado',
-            inscricaoEstadualPessoa: dadosDepois.InscricaoEstadual || dadosAntes.InscricaoEstadual || 'Não informado',
-            inscricaoMunicipalPessoa: dadosDepois.InscricaoMunicipal || dadosAntes.InscricaoMunicipal || 'Não informado',
-            emailPessoa: dadosDepois.Email || dadosAntes.Email || 'Não informado',
-            nomeUsuario: item.usuario?.nomeUsuario || '',
-            usuarioNome: item.usuario?.login || ''
-          };
-        });
-
-
-        this.carregandoHistorico = false;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar histórico da pessoa:', err);
-        this.mensagemErro.push('Erro ao carregar histórico da pessoa.');
-        this.carregandoHistorico = false;
-      }
-    });
-  }
-
-  formatarTelefonesEmLinha(valor?: string): string {
-    if (!valor) return '';
     return valor
       .split(';')
-      .map(tel => {
-        const cleaned = tel.replace(/\D/g, '');
-        if (cleaned.length === 11) {
-          return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        } else if (cleaned.length === 10) {
-          return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        } else {
-          return tel.trim(); // não formata se não tiver 10 ou 11 dígitos
+      .map(telefone => {
+        const numeros =
+          telefone.replace(/\D/g, '');
+
+        if (numeros.length === 11) {
+          return numeros.replace(
+            /(\d{2})(\d{5})(\d{4})/,
+            '($1) $2-$3'
+          );
         }
+
+        if (numeros.length === 10) {
+          return numeros.replace(
+            /(\d{2})(\d{4})(\d{4})/,
+            '($1) $2-$3'
+          );
+        }
+
+        return telefone.trim();
       })
       .join('; ');
   }
 
-  formatarCampoTelefone() {
-    const telCtrl = this.form.get('telefone');
-    const valor = telCtrl?.value;
-
-    if (!valor) return;
-
-    const telefones = valor.split(';').map(t => t.trim()).filter(t => t);
-    //aumenta o quantidade
-    if (telefones.length > 3) {
-      this.mensagemErro = ['Você só pode informar no máximo três telefones.'];
-      // Remove o que foi digitado a mais (opcional)
-      telCtrl?.setValue(telefones.slice(0, 2).join('; '));
-    } else {
-      telCtrl?.setValue(this.formatarTelefonesEmLinha(valor));
-    }
-  } formatarLimitarTelefones() {
+  formatarLimitarTelefones(): void {
     const controle = this.form.get('telefone');
-    if (!controle) return;
 
-    const valor = controle.value;
-    if (!valor) return;
+    if (!controle?.value) {
+      return;
+    }
 
-    const formatado = this.limitarTelefonesMaximo22Numeros(valor);
+    const formatado =
+      this.limitarTelefonesMaximo33Numeros(
+        controle.value
+      );
+
     controle.setValue(formatado);
   }
 
-  validarQuantidadeTelefones(valor: string): boolean {
-    const telefones = valor.split(';').map(t => t.trim()).filter(t => t);
-    //retorno ate 3 numeros
-    return telefones.length <= 3;
-  }
-  limitarSeparadores(event: KeyboardEvent) {
-    const input = this.form.get('telefone')?.value || '';
-    const quantidadePontoVirgula = (input.match(/;/g) || []).length;
+  limitarTelefonesMaximo33Numeros(
+    valor: string
+  ): string {
+    const apenasNumeros = valor
+      .replace(/\D/g, '')
+      .substring(0, 33);
 
-    //aumenta a quantidade de ponto e virgula
-    if (event.key === ';' && quantidadePontoVirgula >= 2) {
-      event.preventDefault(); // bloqueia a digitação
-    }
-  } limitarTelefonesMaximo22Numeros(valor: string): string {
-    // Extrai apenas os números (ignorando espaços, parênteses, hífens, etc.)
-    //aumenta o numero de digitos
-    const apenasNumeros = valor.replace(/\D/g, '').substring(0, 33);
+    const telefones: string[] = [];
 
-    let resultado = '';
-    let contador = 0;
+    let inicio = 0;
 
-    while (contador < apenasNumeros.length) {
-      const restante = apenasNumeros.length - contador;
+    while (inicio < apenasNumeros.length) {
+      const restante =
+        apenasNumeros.length - inicio;
 
       if (restante >= 11) {
-        // Formata como celular com 9 dígitos
-        resultado += `(${apenasNumeros.substr(contador, 2)}) ${apenasNumeros.substr(contador + 2, 5)}-${apenasNumeros.substr(contador + 7, 4)}; `;
-        contador += 11;
-      } else if (restante >= 10) {
-        // Formata como fixo com 8 dígitos
-        resultado += `(${apenasNumeros.substr(contador, 2)}) ${apenasNumeros.substr(contador + 2, 4)}-${apenasNumeros.substr(contador + 6, 4)}; `;
-        contador += 10;
+        const telefone =
+          apenasNumeros.substring(
+            inicio,
+            inicio + 11
+          );
+
+        telefones.push(
+          telefone.replace(
+            /(\d{2})(\d{5})(\d{4})/,
+            '($1) $2-$3'
+          )
+        );
+
+        inicio += 11;
+      } else if (restante === 10) {
+        const telefone =
+          apenasNumeros.substring(
+            inicio,
+            inicio + 10
+          );
+
+        telefones.push(
+          telefone.replace(
+            /(\d{2})(\d{4})(\d{4})/,
+            '($1) $2-$3'
+          )
+        );
+
+        inicio += 10;
       } else {
-        break; // se restarem menos de 10, não tenta formatar
+        break;
       }
     }
 
-    return resultado.trim().replace(/;$/, ''); // remove o último ";" se necessário
+    return telefones.join('; ');
   }
 
-  private tratarErro(e: any) {
+  formatarCampoEmail(): void {
+    const controle = this.form.get('email');
+    const valor = controle?.value;
+
+    if (!valor) {
+      return;
+    }
+
+    let emails = valor
+      .split(';')
+      .map(email => email.trim())
+      .filter(email => email);
+
+    if (emails.length > 3) {
+      this.mensagemErro = [
+        'Você só pode informar no máximo três e-mails.'
+      ];
+
+      emails = emails.slice(0, 3);
+    }
+
+    controle.setValue(
+      emails.join('; ')
+    );
+  }
+
+ 
+
+  private converterJson(valor: any): any {
+    if (!valor) {
+      return {};
+    }
+
+    if (typeof valor === 'object') {
+      return valor;
+    }
+
+    try {
+      return JSON.parse(valor);
+    } catch {
+      return {};
+    }
+  }
+
+  get podeEnviar(): boolean {
+    return this.form.valid &&
+      !this.carregando;
+  }
+
+  voltar(): void {
+    this.router.navigate([
+      '/admin/consultar-pessoas'
+    ]);
+  }
+
+  private tratarErro(
+    err: HttpErrorResponse
+  ): void {
     this.mensagemErro = [];
-    const errorResponse = e.error;
+
+    const errorResponse = err.error;
 
     if (errorResponse?.errors) {
       for (const key in errorResponse.errors) {
-        if (Array.isArray(errorResponse.errors[key])) {
-          this.mensagemErro.push(...errorResponse.errors[key]);
+        const erros =
+          errorResponse.errors[key];
+
+        if (Array.isArray(erros)) {
+          this.mensagemErro.push(
+            ...erros
+          );
         }
       }
+    } else if (errorResponse?.message) {
+      this.mensagemErro.push(
+        errorResponse.message
+      );
     } else if (errorResponse?.mensagem) {
-      this.mensagemErro.push(errorResponse.mensagem);
-      if (errorResponse.Detalhes) {
-        this.mensagemErro.push(errorResponse.Detalhes);
-      }
+      this.mensagemErro.push(
+        errorResponse.mensagem
+      );
     } else if (errorResponse?.Message) {
-      this.mensagemErro.push(errorResponse.Message);
-      if (errorResponse.inner) {
-        this.mensagemErro.push(errorResponse.inner);
-      }
+      this.mensagemErro.push(
+        errorResponse.Message
+      );
     } else {
-      this.mensagemErro.push('Ocorreu um erro inesperado ao processar sua solicitação.');
+      this.mensagemErro.push(
+        'Erro inesperado ao atualizar a pessoa jurídica.'
+      );
     }
 
     this.carregando = false;
   }
 }
-*/

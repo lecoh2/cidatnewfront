@@ -1,422 +1,960 @@
-
 declare var bootstrap: any;
+
 import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  inject,
+  OnInit,
   ViewChild
 } from '@angular/core';
-import { FormBuilder, Validators } from "@angular/forms";
-import { ActivatedRoute } from "@angular/router";
-import { Router } from "@angular/router";
-import { ProcessoService } from "../../../../../core/services/processo.service";
-import { AuthHelper } from "../../../../../core/helpers/auth.helper";
 
-import { UsuarioService } from "../../../../../core/services/usuario.service";
-import { AcaoService } from "../../../../../core/services/acao.service";
-import { PessoaService } from "../../../../../core/services/pessoa.service";
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators
+} from '@angular/forms';
 
-import { EtiquetaService } from "../../../../../core/services/etiqueta.service";
-import { inject, OnInit } from "@angular/core";
-import { InstanciaEnum } from "../../../../../core/models/enums/intancia/instanciaEnum";
-import { AcessoEnum } from "../../../../../core/models/enums/acesso/acesoEnum";
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin, catchError, of } from 'rxjs';
-import { ConsultarVaraResponse } from '../../../../../core/models/vara/consultar-vara-response';
-import { ConsultarAcaoResponse } from '../../../../../core/models/acao/consultar-acao-response';
+import { ActivatedRoute, Router } from '@angular/router';
+
+import {
+  catchError,
+  finalize,
+  forkJoin,
+  of
+} from 'rxjs';
+
+import { ProcessoService } from '../../../../../core/services/processo.service';
+import { AuthHelper } from '../../../../../core/helpers/auth.helper';
+import { UsuarioService } from '../../../../../core/services/usuario.service';
+import { PessoaService } from '../../../../../core/services/pessoa.service';
+import { EtiquetaService } from '../../../../../core/services/etiqueta.service';
+import { HistoricoService } from '../../../../../core/services/historico.service';
+
 import { ConsultarUsuarioResponse } from '../../../../../core/models/usuario/consultar-usuarios.response';
+import { UsuarioEstagiarioResponse } from '../../../../../core/models/usuario/usuario-estagiario-response';
 
 import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
 import { PessoaSelecionada } from '../../../../../core/models/pessoa/pessoa-selecionada';
 import { PessoaResumo } from '../../../../../core/models/pessoa/pessoa-resumo';
-import { HistoricoService } from '../../../../../core/services/historico.service';
+
+import { InstanciaEnum } from '../../../../../core/models/enums/intancia/instanciaEnum';
+import { AcessoEnum } from '../../../../../core/models/enums/acesso/acesoEnum';
 import { TipoEntidadeEnum } from '../../../../../core/models/enums/tipo-entidade/tipo-entidadeEnum';
+
+import { TipoDocumentoProcessoEnum } from '../../../../../core/models/enums/tipo-documento/tipo-documento-processo-enum';
+
 import { ProcessoUpdateRequest } from '../../../../../core/models/processo/processo-update-request';
 import { ProcessoLocalPadraoResponse } from '../../../../../core/models/processo/processo-local-padrao-response';
+import { ProcessoLocalizacaoResponse } from '../../../../../core/models/processo/processo-localizacao-response';
 
+type DocumentoForm = FormGroup<{
+  tipoDocumento: FormControl<TipoDocumentoProcessoEnum | null>;
+  numeroDocumento: FormControl<string | null>;
+}>;
 
 @Component({
   selector: 'app-editar-processo',
   standalone: false,
   templateUrl: './editar-processo.html',
-  styleUrl: './editar-processo.css',
+  styleUrl: './editar-processo.css'
 })
-
-
 export class EditarProcesso implements OnInit {
+
   @ViewChild('modalHistorico')
   modalHistorico!: ElementRef;
+@ViewChild('modalLocalizacoes')
+modalLocalizacoes!: ElementRef;
+  // =========================
+  // INJEÇÕES
+  // =========================
+
   private builder = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private processoService = inject(ProcessoService);
   private authHelper = inject(AuthHelper);
-
-  private acaoService = inject(AcaoService);
   private usuarioService = inject(UsuarioService);
   private pessoaService = inject(PessoaService);
-
   private etiquetaService = inject(EtiquetaService);
   private historicoService = inject(HistoricoService);
   private cdr = inject(ChangeDetectorRef);
-  historico: any[] = [];
-  carregandoHistorico = false;
-  id!: string;
+
+  // =========================
+  // ESTADO
+  // =========================
+
+  id = '';
 
   carregando = false;
+  carregandoHistorico = false;
+
   mensagemErro: string[] = [];
   mensagemSucesso: string[] = [];
 
+  historico: any[] = [];
 
+  // =========================
+  // USUÁRIOS
+  // =========================
 
   responsaveis: ConsultarUsuarioResponse[] = [];
 
+  estagiarios: UsuarioEstagiarioResponse[] = [];
+
+  // =========================
+  // ETIQUETAS
+  // =========================
 
   tiposetiquetas: ConsultarEtiquetaResponse[] = [];
+
   etiquetasSelecionadas: ConsultarEtiquetaResponse[] = [];
 
-  //  AGORA PADRONIZADO
+  // =========================
+  // PESSOAS
+  // =========================
+
   pessoasSelecionadas: PessoaSelecionada[] = [];
   pessoasFiltradas: PessoaResumo[] = [];
 
   envolvidosSelecionados: PessoaSelecionada[] = [];
   envolvidosFiltradas: PessoaResumo[] = [];
 
+  // =========================
+  // LOCALIZAÇÃO
+  // =========================
+
+ localizacoesProcesso: ProcessoLocalizacaoResponse[] = [];
+
+  locais: ProcessoLocalPadraoResponse[] = [];
+
+  // =========================
+  // ENUMS
+  // =========================
+
   instanciaEnum = InstanciaEnum;
   acessoEnum = AcessoEnum;
-  localizacoesProcesso: any[] = [];
-  locais: ProcessoLocalPadraoResponse[] = [];
+
+  tiposDocumentos = [
+    {
+      id: TipoDocumentoProcessoEnum.Parecer,
+      nome: 'Parecer'
+    },
+    {
+      id: TipoDocumentoProcessoEnum.Despacho,
+      nome: 'Despacho'
+    },
+    {
+      id: TipoDocumentoProcessoEnum.TCE,
+      nome: 'TCE'
+    },
+    {
+      id: TipoDocumentoProcessoEnum.Oficio,
+      nome: 'Ofício'
+    }
+  ];
+
+  // =========================
+  // FORMULÁRIO
+  // =========================
+
   form = this.builder.group({
+    usuarioResponsavelId:
+      this.builder.control<string | null>(null),
 
+    estagiarioResponsavelId:
+      this.builder.control<string | null>(null),
 
-    usuarioResponsavelId: this.builder.control<string | null>(null),
+    titulo:
+      this.builder.control<string | null>(null),
 
-    titulo: [''],
-    numeroProcesso: ['', Validators.required],
+    numeroProcesso:
+      this.builder.control<string | null>(
+        null,
+        Validators.required
+      ),
 
-    objeto: [''],
+    objeto:
+      this.builder.control<string | null>(null),
 
-    distribuido: [null],
+    distribuido:
+      this.builder.control<string | null>(null),
 
-    observacao: ['', [Validators.required, Validators.minLength(20)]],
+    observacao:
+      this.builder.control<string | null>(
+        null,
+        [
+          Validators.required,
+          Validators.minLength(20)
+        ]
+      ),
 
-    acesso: [null],
-    tipoProcesso: [null],
-    novaLocalizacao: [''],
-    localizacaoInicialId: [null, Validators.required]
+    acesso:
+      this.builder.control<number | null>(null),
+
+    tipoProcesso:
+      this.builder.control<number | null>(null),
+
+    novaLocalizacao:
+      this.builder.control<string | null>(null),
+
+    localizacaoInicialId:
+      this.builder.control<string | null>(
+        null,
+        Validators.required
+      ),
+
+    documentos:
+      this.builder.array<DocumentoForm>([])
   });
+
+  // =========================
+  // GETTERS
+  // =========================
+
   get podeEnviar(): boolean {
-    return this.form.valid;
+    return this.form.valid && !this.carregando;
   }
 
-  private carregarDadosIniciais() {
+  get documentos(): FormArray<DocumentoForm> {
+    return this.form.controls.documentos;
+  }
+
+  // =========================
+  // INIT
+  // =========================
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+
+    if (!id) {
+      this.mensagemErro = [
+        'Não foi possível identificar o processo.'
+      ];
+
+      return;
+    }
+
+    this.id = id;
+
+    /*
+     * O processo será carregado somente depois que
+     * responsáveis, estagiários, etiquetas e locais
+     * estiverem disponíveis.
+     */
+    this.carregarDadosIniciais();
+  }
+
+  // =========================
+  // DADOS INICIAIS
+  // =========================
+
+  private carregarDadosIniciais(): void {
     this.carregando = true;
     this.mensagemErro = [];
 
     forkJoin({
+      usuarios:
+        this.usuarioService
+          .consultarUsuarioResponsavel()
+          .pipe(
+            catchError(() =>
+              of([] as ConsultarUsuarioResponse[])
+            )
+          ),
 
-      usuarios: this.usuarioService.consultarUsuarioResponsavel(),
+      estagiarios:
+        this.usuarioService
+          .consultarEstagiarios()
+          .pipe(
+            catchError(() =>
+              of([] as UsuarioEstagiarioResponse[])
+            )
+          ),
 
-      etiquetas: this.etiquetaService.consultar(),
-      localizacoes: this.processoService.consultarLocais()
-    }).subscribe({
-      next: (res) => {
-        console.log('🔥 PROCESSO BACKEND:', res);
-        const { usuarios, etiquetas, localizacoes } = res as {
+      etiquetas:
+        this.etiquetaService
+          .consultar()
+          .pipe(
+            catchError(() =>
+              of([] as ConsultarEtiquetaResponse[])
+            )
+          ),
 
-          usuarios: ConsultarUsuarioResponse[];
-          etiquetas: ConsultarEtiquetaResponse[];
-          localizacoes: ProcessoLocalPadraoResponse[];
+      localizacoes:
+        this.processoService
+          .consultarLocais()
+          .pipe(
+            catchError(() =>
+              of([] as ProcessoLocalPadraoResponse[])
+            )
+          )
+    })
+      .subscribe({
+        next: response => {
+          this.responsaveis =
+            response.usuarios ?? [];
 
-        };
+          this.estagiarios =
+            response.estagiarios ?? [];
 
-        this.locais = localizacoes;
+          this.tiposetiquetas =
+            response.etiquetas ?? [];
 
+          this.locais =
+            response.localizacoes ?? [];
 
-        this.responsaveis = usuarios;
-        this.tiposetiquetas = etiquetas;
-        this.locais = localizacoes;
-
-        // 🔥 IMPORTANTE (somente no EDITAR)
-        if (this.id) {
           this.carregarProcesso();
+        },
+
+        error: () => {
+          this.mensagemErro = [
+            'Erro ao carregar os dados iniciais.'
+          ];
+
+          this.carregando = false;
         }
-      },
-      error: () => {
-        this.mensagemErro = ['Erro ao carregar dados iniciais'];
-        this.carregando = false;
-      },
-      complete: () => {
-        this.carregando = false;
-      }
+      });
+  }
+
+  // =========================
+  // CARREGAR PROCESSO
+  // =========================
+
+  private carregarProcesso(): void {
+    this.processoService
+      .ObterProcessoPorId(this.id)
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          console.log(
+            'PROCESSO RECEBIDO:',
+            res
+          );
+
+          this.localizacoesProcesso =
+            res.localizacoes ?? [];
+
+          const localAtual =
+            this.localizacoesProcesso
+              .slice()
+              .sort(
+                (a: any, b: any) =>
+                  new Date(
+                    b.dataCadastro
+                  ).getTime() -
+                  new Date(
+                    a.dataCadastro
+                  ).getTime()
+              )
+              .find(
+                (item: any) =>
+                  item.atual
+              );
+
+          this.form.patchValue(
+            {
+              usuarioResponsavelId:
+                res.usuarioResponsavelId ??
+                null,
+
+              estagiarioResponsavelId:
+                res.estagiarioResponsavelId ??
+                null,
+
+              titulo:
+                res.titulo ?? '',
+
+              numeroProcesso:
+                res.numeroProcesso ?? '',
+
+              objeto:
+                res.objeto ?? '',
+
+              distribuido:
+                res.distribuido ?? null,
+
+              observacao:
+                res.observacao ?? '',
+
+              acesso:
+                res.acesso ?? null,
+
+              tipoProcesso:
+                res.tipoProcesso ?? null,
+
+              novaLocalizacao:
+                localAtual?.local ?? null,
+
+              /*
+               * Caso o backend não retorne
+               * localizacaoInicialId, mantém o ID
+               * da localização atual.
+               */
+              localizacaoInicialId:
+                res.localizacaoInicialId ??
+                localAtual?.id ??
+                null
+            },
+            {
+              emitEvent: false
+            }
+          );
+
+          // CLIENTES
+          this.pessoasSelecionadas =
+            (
+              res.grupoClienteProcesso ??
+              []
+            ).map((item: any) => ({
+              id: item.idPessoa,
+              nome: item.nome
+            }));
+
+          // ENVOLVIDOS
+          this.envolvidosSelecionados =
+            (
+              res.grupoEnvolvidosProcesso ??
+              []
+            ).map((item: any) => ({
+              id: item.idPessoa,
+              nome: item.nome
+            }));
+
+          // ETIQUETAS
+          this.etiquetasSelecionadas =
+            (
+              res.grupoEtiquetasProcesso ??
+              []
+            ).map((item: any) => ({
+              id: item.idEtiqueta,
+              nome: item.nome,
+              cor: item.cor
+            }));
+
+          // DOCUMENTOS
+          this.documentos.clear();
+
+          const documentosRecebidos =
+            res.documentos ?? [];
+
+          documentosRecebidos.forEach(
+            (item: any) => {
+              this.documentos.push(
+                this.criarDocumentoForm(
+                  item.tipoDocumento,
+                  item.numeroDocumento
+                )
+              );
+            }
+          );
+        },
+
+        error: () => {
+          this.mensagemErro = [
+            'Erro ao carregar o processo.'
+          ];
+        }
+      });
+  }
+
+  // =========================
+  // DOCUMENTOS
+  // =========================
+
+  private criarDocumentoForm(
+    tipoDocumento:
+      TipoDocumentoProcessoEnum | null =
+        null,
+
+    numeroDocumento:
+      string | null =
+        null
+  ): DocumentoForm {
+    return this.builder.group({
+      tipoDocumento:
+        this.builder.control<
+          TipoDocumentoProcessoEnum | null
+        >(
+          tipoDocumento,
+          Validators.required
+        ),
+
+      numeroDocumento:
+        this.builder.control<string | null>(
+          numeroDocumento,
+          [
+            Validators.required,
+            Validators.maxLength(100)
+          ]
+        )
     });
-  } irParaLista(): void {
-    this.router.navigate(['/admin/consultar-processo']);
-  }
-  buscarPessoas(nome: string) {
-    this.pessoaService.consultarPessoasResumo(nome)
-      .pipe(catchError(() => of([])))
-      .subscribe(res => this.pessoasFiltradas = res);
   }
 
-  buscarEnvolvidos(nome: string) {
-    this.pessoaService.consultarPessoasResumo(nome)
-      .pipe(catchError(() => of([])))
-      .subscribe(res => this.envolvidosFiltradas = res);
-  }
-  ngOnInit(): void {
-    this.id = this.route.snapshot.paramMap.get('id')!;
-
-    this.carregarDadosIniciais();
-    this.carregarProcesso();
-
-
+  adicionarDocumento(): void {
+    this.documentos.push(
+      this.criarDocumentoForm()
+    );
   }
 
-  // ================= CARREGAR PROCESSO =================
-  private carregarProcesso() {
-    this.carregando = true;
+  removerDocumento(index: number): void {
+    if (
+      index < 0 ||
+      index >= this.documentos.length
+    ) {
+      return;
+    }
 
-    this.processoService.ObterProcessoPorId(this.id).subscribe({
-      next: (res: any) => {
-        console.log('🔥 PROCESSO BACKEND:', res); // 👈 AQUI
-        const atual = res.localizacoes
-          ?.slice()
-          .sort((a: any, b: any) => new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime())
-          .find((x: any) => x.atual);
-        // FORM
-        this.form.patchValue({
-
-
-
-          usuarioResponsavelId: res.usuarioResponsavelId,
-
-          titulo: res.titulo,
-          numeroProcesso: res.numeroProcesso,
-          distribuido: res.distribuido,
-          observacao: res.observacao,
-          tipoProcesso: res.tipoProcesso,
-          novaLocalizacao: atual?.local ?? null,
-          localizacaoInicialId: atual?.id ?? null
-        }, { emitEvent: false });
-
-        // CLIENTES
-        this.pessoasSelecionadas = (res.grupoClienteProcesso ?? []).map((c: any) => ({
-          id: c.idPessoa,
-          nome: c.nome,
-
-        }));
-
-        // ENVOLVIDOS
-        this.envolvidosSelecionados = (res.grupoEnvolvidosProcesso ?? []).map((e: any) => ({
-          id: e.idPessoa,
-          nome: e.nome,
-
-        }));
-
-        // ETIQUETAS
-        this.etiquetasSelecionadas = (res.grupoEtiquetasProcesso ?? []).map((e: any) => ({
-          id: e.idEtiqueta,
-          nome: e.nome,
-          cor: e.cor
-        }));
-
-        this.carregando = false;
-      },
-      error: () => {
-        this.mensagemErro = ['Erro ao carregar processo'];
-        this.carregando = false;
-      }
-    });
+    this.documentos.removeAt(index);
   }
+
+  documentoInvalido(
+    index: number,
+    campo:
+      'tipoDocumento' |
+      'numeroDocumento'
+  ): boolean {
+    const controle =
+      this.documentos
+        .at(index)
+        .controls[campo];
+
+    return controle.touched &&
+      controle.invalid;
+  }
+
+  // =========================
+  // BUSCAS
+  // =========================
+
+  buscarPessoas(nome: string): void {
+    const termo = nome?.trim();
+
+    if (!termo || termo.length < 2) {
+      this.pessoasFiltradas = [];
+      return;
+    }
+
+    this.pessoaService
+      .consultarPessoasResumo(termo)
+      .pipe(
+        catchError(() =>
+          of([] as PessoaResumo[])
+        )
+      )
+      .subscribe(response => {
+        this.pessoasFiltradas =
+          response ?? [];
+      });
+  }
+
+  buscarEnvolvidos(nome: string): void {
+    const termo = nome?.trim();
+
+    if (!termo || termo.length < 2) {
+      this.envolvidosFiltradas = [];
+      return;
+    }
+
+    this.pessoaService
+      .consultarPessoasResumo(termo)
+      .pipe(
+        catchError(() =>
+          of([] as PessoaResumo[])
+        )
+      )
+      .subscribe(response => {
+        this.envolvidosFiltradas =
+          response ?? [];
+      });
+  }
+
+  // =========================
+  // SUBMIT
+  // =========================
+
   onSubmit(): void {
     this.mensagemErro = [];
     this.mensagemSucesso = [];
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+
+      this.documentos.controls
+        .forEach(documento =>
+          documento.markAllAsTouched()
+        );
+
+      this.mensagemErro = [
+        'Preencha corretamente os campos obrigatórios.'
+      ];
+
       return;
     }
 
     this.carregando = true;
 
-    const f = this.form.value;
-    const limpar = (v: any) => v ?? undefined;
+    const formValue =
+      this.form.getRawValue();
 
-    const request: ProcessoUpdateRequest = {
-
-      usuarioResponsavelId: limpar(f.usuarioResponsavelId),
-
-      titulo: limpar(f.titulo),
-      numeroProcesso: limpar(f.numeroProcesso),
-
-      objeto: limpar(f.objeto),
-
-      distribuido: limpar(f.distribuido),
-      observacao: limpar(f.observacao),
-
-      tipoProcesso: limpar(f.tipoProcesso),
-      novaLocalizacao: limpar(f.novaLocalizacao),
-      localizacaoInicialId: limpar(f.localizacaoInicialId),
-      grupoClienteProcesso: this.pessoasSelecionadas.map(p => ({
-        idPessoa: p.id,
-
-      })),
-
-      grupoEnvolvidosProcesso: this.envolvidosSelecionados.map(e => ({
-        idPessoa: e.id,
-
-      })),
-
-      grupoEtiquetasProcesso: this.etiquetasSelecionadas.map(e => ({
-        etiquetaId: e.id!
-      }))
+    const limpar = <T>(
+      valor: T | null | undefined
+    ): T | undefined => {
+      return valor === null ||
+        valor === undefined
+          ? undefined
+          : valor;
     };
 
-    this.processoService.editarProcesso(this.id, request).subscribe({
-      next: (res: any) => {
-        this.carregando = false;
+    const documentos =
+      formValue.documentos
+        .filter(documento =>
+          documento.tipoDocumento != null &&
+          !!documento.numeroDocumento?.trim()
+        )
+        .map(documento => ({
+          tipoDocumento:
+            documento.tipoDocumento!,
 
-        this.mensagemSucesso = [
-          res.message ?? 'Processo atualizado com sucesso'
-        ];
+          numeroDocumento:
+            documento.numeroDocumento!
+              .trim()
+        }));
 
-        this.cdr.detectChanges(); // 👈 força render
+    const request: ProcessoUpdateRequest = {
+      usuarioResponsavelId:
+        limpar(
+          formValue.usuarioResponsavelId
+        ),
 
-        setTimeout(() => {
-          this.router.navigate(['/admin/consultar-processo']);
-        }, 3000);
-      },
-      error: (err) => this.tratarErro(err)
-    });
+      estagiarioResponsavelId:
+        limpar(
+          formValue.estagiarioResponsavelId
+        ),
+
+      titulo:
+        limpar(
+          formValue.titulo?.trim()
+        ),
+
+      numeroProcesso:
+        limpar(
+          formValue.numeroProcesso?.trim()
+        ),
+
+      objeto:
+        limpar(
+          formValue.objeto?.trim()
+        ),
+
+      distribuido:
+        limpar(
+          formValue.distribuido
+        ),
+
+      observacao:
+        limpar(
+          formValue.observacao?.trim()
+        ),
+
+      acesso:
+        limpar(
+          formValue.acesso
+        ),
+
+      tipoProcesso:
+        limpar(
+          formValue.tipoProcesso
+        ),
+
+      novaLocalizacao:
+        limpar(
+          formValue.novaLocalizacao
+        ),
+
+      localizacaoInicialId:
+        limpar(
+          formValue.localizacaoInicialId
+        ),
+
+      documentos,
+
+      grupoClienteProcesso:
+        this.pessoasSelecionadas.map(
+          pessoa => ({
+            idPessoa: pessoa.id
+          })
+        ),
+
+      grupoEnvolvidosProcesso:
+        this.envolvidosSelecionados.map(
+          pessoa => ({
+            idPessoa: pessoa.id
+          })
+        ),
+
+      grupoEtiquetasProcesso:
+        this.etiquetasSelecionadas.map(
+          etiqueta => ({
+            etiquetaId:
+              etiqueta.id!
+          })
+        )
+    };
+
+    this.processoService
+      .editarProcesso(
+        this.id,
+        request
+      )
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          this.mensagemErro = [];
+
+          this.mensagemSucesso = [
+            response.message
+          ];
+
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            this.router.navigate([
+              '/admin/consultar-processo'
+            ]);
+          }, 3000);
+        },
+
+        error: (
+          err: HttpErrorResponse
+        ) => {
+          this.tratarErro(err);
+        }
+      });
   }
-  private tratarErro(err: HttpErrorResponse) {
+
+  // =========================
+  // NAVEGAÇÃO
+  // =========================
+
+  irParaLista(): void {
+    this.router.navigate([
+      '/admin/consultar-processo'
+    ]);
+  }
+
+  // =========================
+  // ERROS
+  // =========================
+
+  private tratarErro(
+    err: HttpErrorResponse
+  ): void {
     this.mensagemErro = [];
 
-    const e = err.error;
+    const response =
+      err.error;
 
-    if (e?.errors) {
-      for (const key in e.errors) {
-        this.mensagemErro.push(...e.errors[key]);
+    if (response?.errors) {
+      for (
+        const key in
+        response.errors
+      ) {
+        const erros =
+          response.errors[key];
+
+        if (Array.isArray(erros)) {
+          this.mensagemErro.push(
+            ...erros
+          );
+        }
       }
-    } else if (e?.mensagem) {
-      this.mensagemErro.push(e.mensagem);
+    } else if (response?.message) {
+      this.mensagemErro.push(
+        response.message
+      );
+    } else if (response?.mensagem) {
+      this.mensagemErro.push(
+        response.mensagem
+      );
     } else {
-      this.mensagemErro.push('Erro inesperado.');
+      this.mensagemErro.push(
+        'Erro inesperado ao atualizar o processo.'
+      );
     }
-
-    this.carregando = false;
   }
 
-  abrirHistoricoProcesso(processoId: string) {
+  // =========================
+  // HISTÓRICO
+  // =========================
 
+  abrirHistoricoProcesso(
+    processoId: string
+  ): void {
     this.carregandoHistorico = true;
-
     this.historico = [];
 
     const modal =
       new bootstrap.Modal(
-        this.modalHistorico.nativeElement
+        this.modalHistorico
+          .nativeElement
       );
 
     modal.show();
 
     this.historicoService
       .ConsultarHistorico(
-        TipoEntidadeEnum.Processo, // ✅ CORRETO
+        TipoEntidadeEnum.Processo,
         processoId
       )
       .subscribe({
+        next: response => {
+          this.historico =
+            (response ?? []).map(
+              item => ({
+                ...item,
 
-        next: (res) => {
+                antes:
+                  item.dadosAntes
+                    ? JSON.parse(
+                        item.dadosAntes
+                      )
+                    : null,
 
-          this.historico = (res ?? []).map(h => ({
-            ...h,
-            antes: h.dadosAntes
-              ? JSON.parse(h.dadosAntes)
-              : null,
+                depois:
+                  item.dadosDepois
+                    ? JSON.parse(
+                        item.dadosDepois
+                      )
+                    : null
+              })
+            );
 
-            depois: h.dadosDepois
-              ? JSON.parse(h.dadosDepois)
-              : null
-          }));
-
-          console.log('🔥 HISTORICO:', this.historico);
-
-          this.carregandoHistorico = false;
+          this.carregandoHistorico =
+            false;
 
           this.cdr.detectChanges();
         },
 
-        error: (err) => {
+        error: error => {
+          console.error(error);
 
-          console.error(err);
-
-          this.carregandoHistorico = false;
+          this.carregandoHistorico =
+            false;
         }
-
       });
   }
 
+  formatarValor(
+    valor: any,
+    campo: string
+  ): string {
+    if (
+      valor === null ||
+      valor === undefined
+    ) {
+      return '-';
+    }
 
-
-  formatarValor(valor: any, campo: string): string {
-
-    if (valor === null || valor === undefined) return '-';
-
-    // ARRAY
     if (Array.isArray(valor)) {
-      return valor.map(v => this.extrairTexto(v)).join(', ');
+      return valor
+        .map(item =>
+          this.extrairTexto(item)
+        )
+        .join(', ');
     }
 
-    // BOOLEAN
     if (typeof valor === 'boolean') {
-      return valor ? 'Sim' : 'Não';
+      return valor
+        ? 'Sim'
+        : 'Não';
     }
 
-    // DATA
-    if (campo.toLowerCase().includes('data')) {
-      const d = new Date(valor);
-      return isNaN(d.getTime()) ? valor : d.toLocaleString('pt-BR');
+    if (
+      campo
+        .toLowerCase()
+        .includes('data')
+    ) {
+      const data =
+        new Date(valor);
+
+      return isNaN(data.getTime())
+        ? valor
+        : data.toLocaleString(
+            'pt-BR'
+          );
     }
 
-    // OBJETO
     if (typeof valor === 'object') {
-      return this.extrairTexto(valor);
+      return this.extrairTexto(
+        valor
+      );
     }
 
     return valor.toString();
   }
-  private extrairTexto(obj: any): string {
-    if (!obj) return '-';
 
-    const normalizado = this.normalizarObjeto(obj);
+  private extrairTexto(
+    objeto: any
+  ): string {
+    if (!objeto) {
+      return '-';
+    }
+
+    const normalizado =
+      this.normalizarObjeto(
+        objeto
+      );
 
     return (
       normalizado.local ||
       normalizado.nome ||
       normalizado.descricao ||
       normalizado.titulo ||
-      JSON.stringify(obj)
+      JSON.stringify(objeto)
     );
   }
-  private normalizarObjeto(obj: any): any {
+
+  private normalizarObjeto(
+    objeto: any
+  ): any {
     const resultado: any = {};
 
-    Object.keys(obj).forEach(key => {
-      resultado[key.toLowerCase()] = obj[key];
-    });
+    Object.keys(objeto)
+      .forEach(chave => {
+        resultado[
+          chave.toLowerCase()
+        ] = objeto[chave];
+      });
 
     return resultado;
   }
-  formatarCampo(campo: string): string {
 
-    const map: any = {
+  formatarCampo(
+    campo: string
+  ): string {
+    const campos: any = {
       titulo: 'Título',
-      numeroprocesso: 'Número do Processo',
+      numeroprocesso:
+        'Número do Processo',
       objeto: 'Objeto',
-      valorcausa: 'Valor da Causa',
-      valorcondenacao: 'Valor da Condenação',
+      valorcausa:
+        'Valor da Causa',
+      valorcondenacao:
+        'Valor da Condenação',
       distribuido: 'Distribuído',
       observacao: 'Observação',
       instancia: 'Instância',
@@ -424,27 +962,65 @@ export class EditarProcesso implements OnInit {
       clientes: 'Clientes',
       envolvidos: 'Envolvidos',
       etiquetas: 'Etiquetas',
+      documentos: 'Documentos',
+      estagiarioresponsavelid:
+        'Estagiário responsável',
       localizacao: 'Localização',
-      novaLocalizacao: 'Localização'
+      novalocalizacao:
+        'Localização'
     };
 
-    return map[campo.toLowerCase()] || campo;
-  } getMudancas(h: any): any[] {
+    return campos[
+      campo.toLowerCase()
+    ] || campo;
+  }
 
-    if (!h?.dadosAntes)
+  getMudancas(
+    historico: any
+  ): any[] {
+    if (!historico?.dadosAntes) {
       return [];
+    }
 
     try {
-
-      const dados = JSON.parse(h.dadosAntes);
+      const dados =
+        JSON.parse(
+          historico.dadosAntes
+        );
 
       return Array.isArray(dados)
         ? dados
         : [];
-
     } catch {
-
       return [];
     }
   }
+  abrirModalLocalizacoes(): void {
+  if (!this.localizacoesProcesso?.length) {
+    this.mensagemErro = [
+      'Nenhuma localização encontrada para este processo.'
+    ];
+
+    return;
+  }
+
+  const modal = new bootstrap.Modal(
+    this.modalLocalizacoes.nativeElement
+  );
+
+  modal.show();
+}get localizacoesOrdenadas(): any[] {
+  return [...(this.localizacoesProcesso ?? [])]
+    .sort((a, b) => {
+      const dataA = new Date(
+        a.dataCadastro ?? 0
+      ).getTime();
+
+      const dataB = new Date(
+        b.dataCadastro ?? 0
+      ).getTime();
+
+      return dataB - dataA;
+    });
+}
 }

@@ -1,361 +1,966 @@
 <div class="container-fluid p-0">
-  <h1 class="h3 mb-3">Editar Pessoas</h1>
-  <div class="row">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="card-title">Edição Pessoa Física</h5>
-          <h6 class="card-subtitle text-muted">Formulário para editção</h6>
-          <button class="btn btn-light bg-white" type="button" data-bs-toggle="modal" data-bs-target="#modalHistorico"
-            (click)="abrirModalHistorico()">
-            <i class="fas fa-history me-1"></i> Ver histórico
-          </button>
 
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h3 mb-1">Editar Pessoa Física</h1>
+      <p class="text-muted mb-0">
+        Atualize os dados cadastrais da pessoa física.
+      </p>
+    </div>
 
-          <!-- Modal de Histórico da Triagem -->
-          <div class="modal fade" id="modalHistorico" tabindex="-1" aria-labelledby="modalHistoricoLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modalHistoricoLabel">
+    <!--<button
+      type="button"
+      class="btn btn-outline-secondary"
+      data-bs-toggle="modal"
+      data-bs-target="#modalHistorico"
+      (click)="abrirModalHistorico()">
 
-                  </h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                  <ng-container *ngIf="historicoPessoa.length > 0; else semHistorico">
-                    <div *ngFor="let item of historicoPessoa" class="border rounded p-3 mb-3">
-                      <dl class="row">
-                        <dt class="col-sm-3">Nome:</dt>
-                        <dd class="col-sm-9">{{ item.nomePessoa }}</dd>
-
-                        <dt class="col-sm-3">CPF:</dt>
-                        <dd class="col-sm-9">{{ item.cpfPessoa }}</dd>
-
-                        <dt class="col-sm-3">RG:</dt>
-                        <dd class="col-sm-9">{{ item.rgPessoa }}</dd>
-
-                        <dt class="col-sm-3">Email:</dt>
-                        <dd class="col-sm-9">{{ item.emailPessoa }}</dd>
-
-                        <dt class="col-sm-3">Usuário que fez a edição:</dt>
-                        <dd class="col-sm-9">{{ item.nomeUsuario }}</dd>
-
-                        <dt class="col-sm-3">Data da edição:</dt>
-                        <dd class="col-sm-9">{{ item.dataAlteracao | date:'dd/MM/yyyy HH:mm' }}</dd>
-
-
-                        <dt class="col-sm-3">Motivo da Edição:</dt>
-                        <dd class="col-sm-9">{{ item.observacoes || 'Não informado' }}</dd>
-                      </dl>
-
-
-
-
-
-                 <div class="row">
-  <!-- Dados Antes -->
-  <div class="col-md-6">
-    <h6>Dados Antes</h6>
-    <table class="table table-sm table-bordered">
-      <tbody>
-        <tr>
-          <th>Nome</th>
-          <td>{{ item.dadosAntesObj?.Nome || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>CPF</th>
-          <td>{{ item.dadosAntesObj?.Cpf || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>RG</th>
-          <td>{{ item.dadosAntesObj?.Rg || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Email</th>
-          <td>{{ item.dadosAntesObj?.Email || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Telefone</th>
-          <td>{{ item.dadosAntesObj?.Telefone || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Profissão</th>
-          <td>{{ item.dadosAntesObj?.Profissao || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Sexo</th>
-          <td>{{ item.dadosAntesObj?.Sexo || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Endereço</th>
-          <td>
-            {{ item.dadosAntesObj?.Endereco?.Logradouro || '' }},
-            {{ item.dadosAntesObj?.Endereco?.Numero || '' }} -
-            {{ item.dadosAntesObj?.Endereco?.Bairro || '' }},
-            {{ item.dadosAntesObj?.Endereco?.Localidade || '' }} -
-            {{ item.dadosAntesObj?.Endereco?.Uf || '' }},
-            CEP: {{ item.dadosAntesObj?.Endereco?.Cep || '' }}
-          </td>
-        </tr>
-        <tr>
-          <th>Data de Atualização</th>
-          <td>
-            {{ item.dadosAntesObj?.DTAtualizacao ? (item.dadosAntesObj?.DTAtualizacao | date: 'dd/MM/yyyy HH:mm') : 'Não informado' }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <i class="fas fa-history me-1"></i>
+      Ver histórico
+    </button>-->
   </div>
 
-  <!-- Dados Depois -->
-  <div class="col-md-6">
-    <h6>Dados Depois</h6>
-    <table class="table table-sm table-bordered">
-      <tbody>
-        <tr>
-          <th>Nome</th>
-          <td>{{ item.dadosDepoisObj?.Nome || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>CPF</th>
-          <td>{{ item.dadosDepoisObj?.Cpf || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>RG</th>
-          <td>{{ item.dadosDepoisObj?.Rg || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Email</th>
-          <td>{{ item.dadosDepoisObj?.Email || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Telefone</th>
-          <td>{{ item.dadosDepoisObj?.Telefone || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Profissão</th>
-          <td>{{ item.dadosDepoisObj?.Profissao || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Sexo</th>
-          <td>{{ item.dadosDepoisObj?.Sexo || 'Não informado' }}</td>
-        </tr>
-        <tr>
-          <th>Endereço</th>
-          <td>
-            {{ item.dadosDepoisObj?.Endereco?.Logradouro || '' }},
-            {{ item.dadosDepoisObj?.Endereco?.Numero || '' }} -
-            {{ item.dadosDepoisObj?.Endereco?.Bairro || '' }},
-            {{ item.dadosDepoisObj?.Endereco?.Localidade || '' }} -
-            {{ item.dadosDepoisObj?.Endereco?.Uf || '' }},
-            CEP: {{ item.dadosDepoisObj?.Endereco?.Cep || '' }}
-          </td>
-        </tr>
-        <tr>
-          <th>Data de Atualização</th>
-          <td>
-            {{ item.dadosDepoisObj?.DTAtualizacao ? (item.dadosDepoisObj?.DTAtualizacao | date: 'dd/MM/yyyy HH:mm') : 'Não informado' }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-                    </div>
-                  </ng-container>
+  <div class="card">
 
-                  <ng-template #semHistorico>
-                    <div class="alert alert-warning">Nenhum histórico encontrado.</div>
-                  </ng-template>
+    <div class="card-header">
+      <h5 class="card-title mb-1">
+        Edição de Pessoa Física
+      </h5>
 
+      <h6 class="card-subtitle text-muted">
+        Os campos marcados com * são obrigatórios.
+      </h6>
+    </div>
 
-                </div>
+    <div class="card-body">
 
-              </div>
-            </div>
-          </div>
+      <!-- INFORMAÇÕES -->
+      <div
+        class="alert alert-primary border-0 shadow-sm d-flex align-items-start p-3 mb-4 rounded-3"
+        role="alert">
+
+        <div class="me-3 mt-1">
+          <i class="fas fa-circle-info fs-4 text-white bg-primary rounded-circle p-2"></i>
         </div>
-        <div class="card-body">
-          <div class="mt-3">
-            <!-- Spinner alinhado à esquerda -->
-            <app-spinner *ngIf="carregando" [show]="true" message="Editando ..." class="d-inline-block">
-            </app-spinner>
 
-            <!-- Alertas ocupando 100% da largura -->
-            <app-alerts *ngIf="!carregando && mensagemSucesso.length > 0" class="w-100" titulo="Sucesso!"
-              [mensagens]="mensagemSucesso" tipo="success" icone="fas fa-check-circle fa-lg">
-            </app-alerts>
+        <div class="flex-grow-1">
+          <h6 class="fw-bold mb-1">
+            Informações obrigatórias
+          </h6>
 
-            <app-alerts *ngIf="!carregando && mensagemErro.length > 0" class="w-100" titulo="Erro!"
-              [mensagens]="mensagemErro" tipo="danger" icone="fas fa-times-circle fa-lg">
-            </app-alerts>
-                 <app-alerts *ngIf="mensagemAviso.length > 0" [icone]="'fas fa-exclamation-triangle'" [titulo]="'Aviso'"
-              [tipo]="'warning'" [mensagens]="mensagemAviso">
-            </app-alerts>
-          </div>
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="row">
-              <div class="mb-3 col-md-4  align-items-end">
-
-                <label class="form-label">Nome</label>
-                <input type="text" class="form-control" formControlName="nome" placeholder="Informe o nome" />
-                <div class="text-danger" *ngIf="form.get('nome')?.touched && form.get('nome')?.hasError('required')">
-                  O nome é obrigatório.
-                </div>
-              </div>
-              <div class=" mb-3 col-md-4 ">
-                <label class="form-label">Telefone(s) <small class="form-text text-muted">permitido 3 telefones seperado
-                    por ponto e vírgula (;)</small></label>
-                <input type="text" class="form-control" formControlName="telefone" (blur)="formatarLimitarTelefones()"
-                  placeholder="(00) 00000-0000; (00) 00000-0000; (00) 00000-0000" />
-                <div class="text-danger"
-                  *ngIf="form.get('telefone')?.touched && form.get('telefone')?.hasError('required')">
-                  O telefone é obrigatório.
-                </div>
-              </div>
-              <div class=" mb-3 col-md-4 ">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" formControlName="email" placeholder="Informe o email" />
-                <div class="text-danger" *ngIf="form.get('email')?.touched && form.get('email')?.hasError('required')">
-                  Email é obrigatório.
-                </div>
-
-              </div>
-
-              <div class="row mb-3 align-items-end">
-                <div class="col-md-6">
-                  <label class="form-label">Profissão</label>
-                  <input type="text" class="form-control" formControlName="profissao"
-                    placeholder="Informe a profissão" />
-                  <div class="text-danger"
-                    *ngIf="form.get('profissao')?.touched && form.get('profissao')?.hasError('required')">
-                    Profissão é obrigatória.
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">RG</label>
-                  <input type="text" class="form-control" mask="00.000.000-0" placeholder="Informe o RG"
-                    formControlName="rg" />
-                  <div class="text-danger" *ngIf="form.get('rg')?.touched && form.get('rg')?.hasError('required')">
-                    RG é obrigatório.
-                  </div>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">CPF</label>
-                  <input type="text" class="form-control" mask="000.000.000-00" formControlName="cpf"
-                    placeholder="Informe o CPF" />
-                  <div class="text-danger" *ngIf="form.get('cpf')?.touched && form.get('cpf')?.hasError('required')">
-                    CPF é obrigatório.
-                  </div>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <div class="col-md-4">
-                  <label class="form-label">Orgão Expeditor</label>
-                  <input type="text" class="form-control" formControlName="expeditor"
-                    placeholder="Informe o órgão expeditor" />
-                  <div class="text-danger"
-                    *ngIf="form.get('expeditor')?.touched && form.get('expeditor')?.hasError('required')">
-                    Órgão expeditor é obrigatório.
-                  </div>
-                </div>
-
-                <div class="col-md-4">
-                  <label class="form-label">Sexo</label>
-                  <select formControlName="idSexo" id="idSexo" class="form-control">
-                    <option value="" disabled>Escolha o sexo</option>
-                    <option *ngFor="let tipo of tiposSexo" [value]="tipo.idSexo">{{ tipo.nomeSexo }}</option>
-                  </select>
-                  <div class="text-danger"
-                    *ngIf="form.get('idSexo')?.touched && form.get('idSexo')?.hasError('required')">
-                    Sexo é obrigatório.
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Endereço -->
-            <h5 class="card-title">Endereço</h5>
-            <div class="row mb-3">
-              <div class="col-md-2">
-                <label class="form-label">CEP</label>
-                <input type="text" class="form-control" mask="00000-000" formControlName="cep"
-                  placeholder="Informe o CEP" (blur)="buscarCep()" />
-                <div class="text-danger" *ngIf="form.get('cep')?.touched && form.get('cep')?.hasError('required')">
-                  CEP é obrigatório.
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Endereço</label>
-                <input type="text" class="form-control" formControlName="logradouro" placeholder="Informe o endereço" />
-                <div class="text-danger"
-                  *ngIf="form.get('logradouro')?.touched && form.get('logradouro')?.hasError('required')">
-                  Endereço é obrigatório.
-                </div>
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Número</label>
-                <input type="text" class="form-control" formControlName="numero" placeholder="Informe o número" />
-                <div class="text-danger"
-                  *ngIf="form.get('numero')?.touched && form.get('numero')?.hasError('required')">
-                  Número é obrigatório.
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Complemento</label>
-                <input type="text" class="form-control" formControlName="complemento"
-                  placeholder="Informe o complemento" />
-              </div>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-md-4">
-                <label class="form-label">Bairro</label>
-                <input type="text" class="form-control" formControlName="bairro" placeholder="Informe o bairro" />
-                <div class="text-danger"
-                  *ngIf="form.get('bairro')?.touched && form.get('bairro')?.hasError('required')">
-                  Bairro é obrigatório.
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Cidade</label>
-                <input type="text" class="form-control" formControlName="localidade" placeholder="Informe a cidade" />
-                <div class="text-danger"
-                  *ngIf="form.get('localidade')?.touched && form.get('localidade')?.hasError('required')">
-                  Cidade é obrigatória.
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">UF</label>
-                <input type="text" class="form-control" (blur)="onBlurUf()" maxlength="2" formControlName="uf"
-                  placeholder="Informe o UF" />
-
-
-                <div class="text-danger" *ngIf="form.get('uf')?.touched && form.get('uf')?.hasError('required')">
-                  UF é obrigatório.
-                </div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="mb-3 col-md-12">
-                <label class="form-label" for="observacoes">Motivo da edição (obrigatório)</label>
-                <textarea id="observacoes" formControlName="observacoes" class="form-control"
-                  placeholder="Informe o motivo da alteração" rows="3"></textarea>
-                <div class="text-danger"
-                  *ngIf="form.get('observacoes')?.touched && form.get('observacoes')?.hasError('required')">
-                  É obrigatório informar o motivo da alteração.
-                </div>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary" [disabled]="form.invalid || carregando">
-              <i class="align-middle me-2 fas fa-save fa-lg"></i> Salvar
-            </button>
-
-          </form>
+          <p class="mb-0">
+            Requerente, contato, CPF, endereço e motivo da edição são obrigatórios.
+          </p>
         </div>
       </div>
+
+      <!-- SPINNER -->
+      <app-spinner
+        *ngIf="carregando"
+        [show]="true"
+        message="Carregando...">
+      </app-spinner>
+
+      <!-- SUCESSO -->
+     <app-alerts
+  *ngIf="!carregando && mensagemSucesso.length > 0"
+  titulo="Sucesso!"
+  [mensagens]="mensagemSucesso"
+  tipo="success"
+  [icone]="'fas fa-check-circle'">
+</app-alerts>
+      <!-- ERRO -->
+      <app-alerts
+        *ngIf="!carregando && mensagemErro.length > 0"
+        titulo="Erro!"
+        [mensagens]="mensagemErro"
+        tipo="danger"
+        [icone]="'fas fa-exclamation-circle'">
+      </app-alerts>
+
+      <!-- AVISO -->
+      <app-alerts
+        *ngIf="!carregando && mensagemAviso.length > 0"
+        titulo="Aviso!"
+        [mensagens]="mensagemAviso"
+        tipo="warning"
+        [icone]="'fas fa-exclamation-triangle'">
+      </app-alerts>
+
+      <!-- NAVEGAÇÃO -->
+      <ul class="nav nav-tabs mb-3">
+
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="step === 1"
+            (click)="irParaStep(1)">
+
+            <i class="fas fa-user me-1"></i>
+            Informações Pessoais
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="step === 2"
+            (click)="irParaStep(2)">
+
+            <i class="fas fa-clipboard-list me-1"></i>
+            Informações Complementares
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="step === 3"
+            (click)="irParaStep(3)">
+
+            <i class="fas fa-id-card me-1"></i>
+            Documentação
+          </button>
+        </li>
+
+      </ul>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()">
+
+        <!-- ================================================= -->
+        <!-- STEP 1 - INFORMAÇÕES PESSOAIS -->
+        <!-- ================================================= -->
+
+        <div [hidden]="step !== 1">
+
+          <h5 class="mb-3">
+            <i class="fas fa-user text-primary me-2"></i>
+            Dados pessoais
+          </h5>
+
+          <div class="row mb-3">
+
+            <!-- NOME -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Requerente *
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="nome"
+                placeholder="Informe o requerente" />
+
+              <div
+                *ngIf="
+                  form.get('nome')?.touched &&
+                  form.get('nome')?.invalid
+                "
+                class="text-danger">
+
+                <span *ngIf="form.get('nome')?.hasError('required')">
+                  O requerente é obrigatório.
+                </span>
+              </div>
+
+            </div>
+
+            <!-- INSCRIÇÃO MUNICIPAL / APELIDO -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Inscrição Municipal
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="apelido"
+                placeholder="Informe a inscrição municipal" />
+
+            </div>
+
+          </div>
+
+          <div class="row mb-3">
+
+            <!-- TELEFONE -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Contato(s) *
+              </label>
+
+              <small class="form-text text-muted d-block">
+                Permitido até 3 telefones separados por ponto e vírgula (;).
+              </small>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="telefone"
+                (blur)="formatarLimitarTelefones()"
+                placeholder="(00) 00000-0000; (00) 00000-0000" />
+
+              <div
+                *ngIf="
+                  form.get('telefone')?.touched &&
+                  form.get('telefone')?.invalid
+                "
+                class="text-danger">
+
+                <span *ngIf="form.get('telefone')?.hasError('required')">
+                  O contato é obrigatório.
+                </span>
+              </div>
+
+            </div>
+
+            <!-- EMAIL -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Email(s)
+              </label>
+
+              <small class="form-text text-muted d-block">
+                Informe até 3 emails separados por ponto e vírgula (;).
+              </small>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="email"
+                (blur)="formatarCampoEmail()"
+                placeholder="email1@example.com; email2@example.com" />
+
+            </div>
+
+          </div>
+
+          <div class="row mb-3">
+
+            <!-- SITE -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Site
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="site"
+                placeholder="Informe o site" />
+
+            </div>
+
+            <!-- PERFIL -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Perfil
+              </label>
+
+              <select
+                class="form-select"
+                formControlName="idPerfil">
+
+                <option [ngValue]="null">
+                  Selecione
+                </option>
+
+                <option
+                  *ngFor="let perfil of perfis"
+                  [ngValue]="perfil.id">
+
+                  {{ perfil.nome }}
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+          <!-- ENDEREÇO -->
+          <h5 class="mt-4 mb-3">
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            Endereço
+          </h5>
+
+          <div formGroupName="endereco">
+
+            <div class="row mb-3">
+
+              <!-- CEP -->
+              <div class="col-md-2">
+
+                <label class="form-label">
+                  CEP *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="cep"
+                  mask="00000-000"
+                  placeholder="CEP"
+                  (blur)="buscarCep()" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.cep')?.touched &&
+                    form.get('endereco.cep')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.cep')?.hasError('required')
+                    ">
+                    O CEP é obrigatório.
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- LOGRADOURO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Logradouro *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="logradouro"
+                  placeholder="Informe o logradouro" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.logradouro')?.touched &&
+                    form.get('endereco.logradouro')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.logradouro')?.hasError('required')
+                    ">
+                    O logradouro é obrigatório.
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- NÚMERO -->
+              <div class="col-md-2">
+
+                <label class="form-label">
+                  Número *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="numero"
+                  placeholder="Número" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.numero')?.touched &&
+                    form.get('endereco.numero')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.numero')?.hasError('required')
+                    ">
+                    O número é obrigatório.
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- COMPLEMENTO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Complemento
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="complemento"
+                  placeholder="Informe o complemento" />
+
+              </div>
+
+            </div>
+
+            <div class="row mb-3">
+
+              <!-- BAIRRO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Bairro *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="bairro"
+                  placeholder="Informe o bairro" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.bairro')?.touched &&
+                    form.get('endereco.bairro')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.bairro')?.hasError('required')
+                    ">
+                    O bairro é obrigatório.
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- CIDADE -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Cidade *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="localidade"
+                  placeholder="Informe a cidade" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.localidade')?.touched &&
+                    form.get('endereco.localidade')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.localidade')?.hasError('required')
+                    ">
+                    A cidade é obrigatória.
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- UF -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  UF *
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control text-uppercase"
+                  formControlName="uf"
+                  maxlength="2"
+                  placeholder="UF"
+                  (blur)="onBlurUf()" />
+
+                <div
+                  *ngIf="
+                    form.get('endereco.uf')?.touched &&
+                    form.get('endereco.uf')?.invalid
+                  "
+                  class="text-danger">
+
+                  <span
+                    *ngIf="
+                      form.get('endereco.uf')?.hasError('required')
+                    ">
+                    A UF é obrigatória.
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- STEP 2 - INFORMAÇÕES COMPLEMENTARES -->
+        <!-- ================================================= -->
+
+        <div [hidden]="step !== 2">
+
+          <h5 class="mb-3">
+            <i class="fas fa-clipboard-list text-primary me-2"></i>
+            Informações complementares
+          </h5>
+
+          <div formGroupName="informacoesComplementares">
+
+            <div class="row mb-3">
+
+              <!-- DATA NASCIMENTO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Data de Nascimento
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="dataNascimento"
+                  mask="00/00/0000"
+                  placeholder="Informe a data de nascimento" />
+
+              </div>
+
+              <!-- PROFISSÃO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Profissão
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="profissao"
+                  placeholder="Informe a profissão" />
+
+              </div>
+
+              <!-- ESTADO CIVIL -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Estado Civil
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="estadoCivil"
+                  placeholder="Informe o estado civil" />
+
+              </div>
+
+            </div>
+
+            <div class="row mb-3">
+
+              <!-- NOME EMPRESA -->
+              <div class="col-md-6">
+
+                <label class="form-label">
+                  Nome da Empresa
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nomeEmpresa"
+                  placeholder="Informe o nome da empresa" />
+
+              </div>
+
+              <!-- ATIVIDADE ECONÔMICA -->
+              <div class="col-md-6">
+
+                <label class="form-label">
+                  Atividade Econômica
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="atividadeEconomica"
+                  placeholder="Informe a atividade econômica" />
+
+              </div>
+
+            </div>
+
+            <div class="row mb-3">
+
+              <!-- CÓDIGO -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Código
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="codigo"
+                  placeholder="Informe o código" />
+
+              </div>
+
+              <!-- NOME PAI -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Nome do Pai
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nomePai"
+                  placeholder="Informe o nome do pai" />
+
+              </div>
+
+              <!-- NOME MÃE -->
+              <div class="col-md-4">
+
+                <label class="form-label">
+                  Nome da Mãe
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nomeMae"
+                  placeholder="Informe o nome da mãe" />
+
+              </div>
+
+            </div>
+
+            <div class="row mb-3">
+
+              <!-- NATURALIDADE -->
+              <div class="col-md-6">
+
+                <label class="form-label">
+                  Naturalidade
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="naturalidade"
+                  placeholder="Informe a naturalidade" />
+
+              </div>
+
+              <!-- NACIONALIDADE -->
+              <div class="col-md-6">
+
+                <label class="form-label">
+                  Nacionalidade
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="nacionalidade"
+                  placeholder="Informe a nacionalidade" />
+
+              </div>
+
+            </div>
+
+            <!-- COMENTÁRIO -->
+            <div class="mb-3">
+
+              <label class="form-label">
+                Comentários
+              </label>
+
+              <textarea
+                class="form-control"
+                rows="3"
+                formControlName="comentario"
+                placeholder="Informe comentários adicionais">
+              </textarea>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- STEP 3 - DOCUMENTAÇÃO -->
+        <!-- ================================================= -->
+
+        <div [hidden]="step !== 3">
+
+          <h5 class="mb-3">
+            <i class="fas fa-id-card text-primary me-2"></i>
+            Documentação
+          </h5>
+
+          <div class="row mb-3">
+
+            <!-- CPF -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                CPF *
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="cpf"
+                mask="000.000.000-00"
+                placeholder="Informe o CPF" />
+
+              <div
+                *ngIf="
+                  form.get('cpf')?.touched &&
+                  form.get('cpf')?.invalid
+                "
+                class="text-danger">
+
+                <span *ngIf="form.get('cpf')?.hasError('required')">
+                  O CPF é obrigatório.
+                </span>
+              </div>
+
+            </div>
+
+            <!-- RG -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                RG
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="rg"
+                placeholder="Informe o RG" />
+
+            </div>
+
+            <!-- CNH -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                CNH
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="cnh"
+                mask="000.000.000.00"
+                placeholder="Informe a CNH" />
+
+            </div>
+
+          </div>
+
+          <div class="row mb-3">
+
+            <!-- CTPS -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                CTPS
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="carteiraTrabalho"
+                placeholder="Informe a CTPS" />
+
+            </div>
+
+            <!-- PIS -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                PIS/PASEP
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="pisPasep"
+                placeholder="Informe o PIS/PASEP" />
+
+            </div>
+
+            <!-- TÍTULO -->
+            <div class="col-md-4">
+
+              <label class="form-label">
+                Título de Eleitor
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="tituloEleitor"
+                placeholder="Informe o título de eleitor" />
+
+            </div>
+
+          </div>
+
+          <div class="row mb-3">
+
+            <!-- PASSAPORTE -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Passaporte
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="passaporte"
+                placeholder="Informe o passaporte" />
+
+            </div>
+
+            <!-- RESERVISTA -->
+            <div class="col-md-6">
+
+              <label class="form-label">
+                Certidão de Reservista
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                formControlName="certidaoReservista"
+                placeholder="Informe a certidão de reservista" />
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- MOTIVO DA EDIÇÃO -->
+        <div class="mt-4">
+
+          <label
+            for="observacoes"
+            class="form-label">
+
+            Motivo da edição *
+          </label>
+
+          <textarea
+            id="observacoes"
+            class="form-control"
+            formControlName="observacoes"
+            rows="3"
+            placeholder="Informe o motivo da alteração">
+          </textarea>
+
+          <div
+            *ngIf="
+              form.get('observacoes')?.touched &&
+              form.get('observacoes')?.invalid
+            "
+            class="text-danger">
+
+            <span
+              *ngIf="
+                form.get('observacoes')?.hasError('required')
+              ">
+              O motivo da edição é obrigatório.
+            </span>
+          </div>
+
+        </div>
+
+        <!-- BOTÕES -->
+        <div class="d-flex justify-content-between mt-4">
+
+       
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!podeEnviar">
+
+            <i class="fas fa-save me-1"></i>
+            Salvar alterações
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================================================= -->
+<!-- MODAL DE HISTÓRICO -->
+<!-- ================================================= -->
+
+<div
+  class="modal fade"
+  id="modalHistorico"
+  tabindex="-1"
+  aria-labelledby="modalHistoricoLabel"
+  aria-hidden="true">
+
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <h5
+          class="modal-title"
+          id="modalHistoricoLabel">
+
+          <i class="fas fa-history me-2"></i>
+          Histórico de alterações
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar">
+        </button>
+
+      </div>
+
+   
+
     </div>
   </div>
 </div>

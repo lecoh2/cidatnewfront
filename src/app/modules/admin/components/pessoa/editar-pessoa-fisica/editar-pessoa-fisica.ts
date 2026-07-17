@@ -1,410 +1,598 @@
-/*import { Component, inject, OnInit } from '@angular/core';
-import { PessoaService } from '../../../../../core/services/pessoa.service';
-import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthHelper } from '../../../../../core/helpers/auth.helper';
-import { SexoService } from '../../../../../core/services/sexo.service';
-import { ConsultarSexoResponse } from '../../../../../core/models/sexo/consutar-sexo-response';
+
+import { PessoaService } from '../../../../../core/services/pessoa.service';
 import { CepService } from '../../../../../core/services/cep.service';
-import { EditarPessoaFisicaRequest } from '../../../../../core/models/pessoa/editar-pessoa-fisica-request';
+import { AuthHelper } from '../../../../../core/helpers/auth.helper';
+import { EtiquetaService } from '../../../../../core/services/etiqueta.service';
+
+import { ConsultarEtiquetaResponse } from '../../../../../core/models/etiqueta/consultar-etiqueta-response';
 import { AutenticarUsuarioResponse } from '../../../../../core/models/usuario/autenticar-usuario.response';
-import { switchMap } from 'rxjs/operators';
-import { ConsultarPessoaResponse } from '../../../../../core/models/pessoa/consultar-pessoa-response';
-import { ConsultarHistoricoPessoaResponse, HistoricoPessoaDados } from '../../../../../core/models/pessoa/consultar-historico-pessoa-response';
+
+import { PerfilEnum } from '../../../../../core/models/enums/perfil/perfilEnum';
+import { TratamentoEnum } from '../../../../../core/models/enums/tratamento/tratamentoEnum';
+
+import { EnderecoRequest } from '../../../../../core/models/endereco/endereco-request';
+import { InformacoesComplementaresRequest } from '../../../../../core/models/informacoes-complementares/informacoes-complementares-request';
+
+import { limparNull } from '../../../../../core/utils/limpar-null';
+import { PessoaFisicaUpdateRequest } from '../../../../../core/models/pessoa/pessoa-fisica-update-request';
+import { finalize } from 'rxjs';
+
 
 @Component({
-  selector: 'app-editar-pessoa',
+  selector: 'app-editar-pessoa-fisica',
   standalone: false,
-  templateUrl: './editar-pessoa-fisica.component.html',
-  styleUrls: ['./editar-pessoa-fisica.component.css']
+  templateUrl: './editar-pessoa-fisica.html',
+  styleUrls: ['./editar-pessoa-fisica.css']
 })
-export class EditarPessoaFisicaComponent implements OnInit {
+export class EditarPessoaFisica implements OnInit {
+
   private pessoaService = inject(PessoaService);
   private builder = inject(FormBuilder);
   private router = inject(Router);
-  private authHelper = inject(AuthHelper);
-  private sexoService = inject(SexoService);
-  private cepService = inject(CepService);
   private route = inject(ActivatedRoute);
-  tiposSexo: ConsultarSexoResponse[] = [];
+  private authHelper = inject(AuthHelper);
+  private cepService = inject(CepService);
+  private etiquetaService = inject(EtiquetaService);
+private cdr = inject(ChangeDetectorRef);
+  idPessoa = '';
+
   usuarioLogado?: AutenticarUsuarioResponse | null;
-  historicoPessoa: ConsultarHistoricoPessoaResponse[] = [];
-  //atributos
-  idPessoa: string = '';
-  nome: string = '';
-  anoBaseTriagem: string = '';
-  telefone: string = '';
-  email: string = '';
-  idSexo: string = '';
-  profissao: string = '';
-  rg: string = '';
-  expeditor: string = '';
-  cpf: string = '';
-  logradouro: string = '';
-  numero: string = '';
-  complemento: string = '';
-  bairro: string = '';
-  localidade: string = '';
-  uf: string = '';
-  cep: string = '';
+
+  tiposEtiquetas: ConsultarEtiquetaResponse[] = [];
+  etiquetaSelecionada?: ConsultarEtiquetaResponse;
+
   mensagemErro: string[] = [];
-  mensagemAviso:string[]=[];
+  mensagemAviso: string[] = [];
   mensagemSucesso: string[] = [];
 
   carregando = false;
+  step = 1;
 
-  temMascaraDupla = true;
+  perfilEnum = PerfilEnum;
+
+  perfis = Object.keys(PerfilEnum)
+    .filter(key => isNaN(Number(key)))
+    .map(key => ({
+      id: PerfilEnum[key as keyof typeof PerfilEnum],
+      nome: key
+    }));
+
+  tratamentoEnum = TratamentoEnum;
+
+  tratamentos = Object.keys(TratamentoEnum)
+    .filter(key => isNaN(Number(key)))
+    .map(key => ({
+      id: TratamentoEnum[key as keyof typeof TratamentoEnum],
+      nome: key
+    }));
 
   form = this.builder.group({
-    idPessoa: new FormControl('', [Validators.required]),
-    nome: new FormControl('', [Validators.required]),
-    telefone: new FormControl(''),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    idSexo: new FormControl('', [Validators.required]),
-    profissao: new FormControl('', [Validators.required]),
-    rg: new FormControl('', [Validators.required]),
-    expeditor: new FormControl('', [Validators.required]),
-    cpf: new FormControl('', [Validators.required]),
-    logradouro: new FormControl('', [Validators.required]),
-    numero: new FormControl('', [Validators.required]),
-    complemento: [''],
-    bairro: new FormControl('', [Validators.required]),
-    localidade: new FormControl('', [Validators.required]),
-    uf: new FormControl('', [Validators.required]),
-    cep: new FormControl(''),
-    idUsuario: new FormControl('', [Validators.required]),
-    observacoes: new FormControl('', Validators.required)
-  });
-  limitarUf(valor: string): string {
-    if (!valor) return '';
-    valor = valor.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 2);
-    return valor;
-  }
+    nome: ['', Validators.required],
+    apelido: [''],
+    telefone: ['', Validators.required],
+    site: [''],
+    email: [''],
+    idPerfil: [null as number | null],
+idEtiqueta: [null as string | null],
 
-  onBlurUf(): void {
-    const valor = this.form.get('uf')?.value || '';
-    const ufLimitada = this.limitarUf(valor);
-    this.form.get('uf')?.setValue(ufLimitada);
-  }
+    // Documentação da pessoa física
+    rg: [''],
+    cpf: ['', Validators.required],
+    tituloEleitor: [''],
+    carteiraTrabalho: [''],
+    pisPasep: [''],
+    cnh: [''],
+    passaporte: [''],
+    certidaoReservista: [''],
+
+    // Controle da alteração
+    idUsuario: [''],
+    observacoes: ['', Validators.required],
+
+    endereco: this.builder.group({
+      logradouro: ['', Validators.required],
+      numero: ['', Validators.required],
+      complemento: [''],
+      bairro: ['', Validators.required],
+      localidade: ['', Validators.required],
+      uf: ['', Validators.required],
+      cep: ['', Validators.required]
+    }),
+
+   informacoesComplementares: this.builder.group({
+  dataNascimento: [''],
+  nomeEmpresa: [''],
+  profissao: [''],
+  atividadeEconomica: [''],
+  estadoCivil: [''],
+  codigo: [''],
+  nomePai: [''],
+  nomeMae: [''],
+  naturalidade: [''],
+  nacionalidade: [''],
+  comentario: ['']
+})
+  });
+
   ngOnInit(): void {
+    this.mensagemErro = [];
     this.carregando = true;
 
     this.usuarioLogado = this.authHelper.get();
-    if (this.usuarioLogado) {
-      this.form.get('idUsuario')?.setValue(this.usuarioLogado.idUsuario ?? null);
+
+    if (this.usuarioLogado?.idUsuario) {
+      this.form.get('idUsuario')?.setValue(
+        this.usuarioLogado.idUsuario
+      );
     }
 
     const id = this.route.snapshot.paramMap.get('id');
+
     if (!id) {
+      this.mensagemErro = [
+        'Não foi possível identificar a pessoa física.'
+      ];
+
       this.carregando = false;
       return;
     }
+
     this.idPessoa = id;
 
-    // Primeiro carrega os sexos, depois carrega os dados da pessoa
-    this.sexoService.consultar().pipe(
-      switchMap(tipos => {
-        this.tiposSexo = tipos;
-        return this.pessoaService.consultarPessoaFisicaPorId(id);
-      })
-    ).subscribe({
+    this.carregarEtiquetas();
+    this.carregarPessoa(id);
+  }
+
+  private carregarPessoa(id: string): void {
+    this.pessoaService
+      .consultarPessoaFisicaPorId(id)
+      .subscribe({
+        next: response => {
+          const pessoa = response.data;
+
+          if (!pessoa) {
+            this.mensagemErro = [
+              'Pessoa física não encontrada.'
+            ];
+
+            this.carregando = false;
+            return;
+          }
+
+          this.form.patchValue({
+            nome: pessoa.nome ?? '',
+            apelido: pessoa.apelido ?? '',
+            telefone: pessoa.telefone ?? '',
+            site: pessoa.site ?? '',
+            email: pessoa.email ?? '',
+
+           
+
+            idEtiqueta:
+              pessoa.idEtiqueta ??
+              null,
+
+            rg: pessoa.rg ?? '',
+            cpf: pessoa.cpf ?? '',
+            tituloEleitor: pessoa.tituloEleitor ?? '',
+            carteiraTrabalho: pessoa.carteiraTrabalho ?? '',
+            pisPasep: pessoa.pisPasep ?? '',
+            cnh: pessoa.cnh ?? '',
+            passaporte: pessoa.passaporte ?? '',
+            certidaoReservista:
+              pessoa.certidaoReservista ?? '',
+
+            endereco: {
+              logradouro:
+                pessoa.endereco?.logradouro ?? '',
+              numero:
+                pessoa.endereco?.numero ?? '',
+              complemento:
+                pessoa.endereco?.complemento ?? '',
+              bairro:
+                pessoa.endereco?.bairro ?? '',
+              localidade:
+                pessoa.endereco?.localidade ?? '',
+              uf:
+                pessoa.endereco?.uf ?? '',
+              cep:
+                pessoa.endereco?.cep ?? ''
+            },
+
+          informacoesComplementares: {
+  dataNascimento:
+    pessoa.informacoesComplementares?.dataNascimento ?? '',
+
+  nomeEmpresa:
+    pessoa.informacoesComplementares?.nomeEmpresa ?? '',
+
+  profissao:
+    pessoa.informacoesComplementares?.profissao ?? '',
+
+  atividadeEconomica:
+    pessoa.informacoesComplementares?.atividadeEconomica ?? '',
+
+  estadoCivil:
+    pessoa.informacoesComplementares?.estadoCivil ?? '',
+
+  codigo:
+    pessoa.informacoesComplementares?.codigo ?? '',
+
+  nomePai:
+    pessoa.informacoesComplementares?.nomePai ?? '',
+
+  nomeMae:
+    pessoa.informacoesComplementares?.nomeMae ?? '',
+
+  naturalidade:
+    pessoa.informacoesComplementares?.naturalidade ?? '',
+
+  nacionalidade:
+    pessoa.informacoesComplementares?.nacionalidade ?? '',
+
+  comentario:
+    pessoa.informacoesComplementares?.comentario ?? ''
+}
+          });
+
+          this.carregando = false;
+        },
+        error: err => {
+          this.tratarErro(err);
+        }
+      });
+  }
+
+  private carregarEtiquetas(): void {
+    this.etiquetaService.consultar().subscribe({
       next: response => {
-        this.form.patchValue({
-          idPessoa: response.idPessoa,
-          nome: response.nome,
-          telefone: response.telefone,
-          email: response.email,
-          idSexo: response.sexo?.idSexo ?? '',
-          profissao: response.profissao,
-          rg: response.rg,
-          expeditor: response.expeditor,
-          cpf: response.cpf,
-          logradouro: response.endereco?.logradouro,
-          numero: response.endereco?.numero,
-          complemento: response.endereco?.complemento,
-          bairro: response.endereco?.bairro,
-          localidade: response.endereco?.localidade,
-          uf: response.endereco?.uf,
-          cep: response.endereco?.cep,
-        });
-        this.carregando = false;
+        this.tiposEtiquetas = response;
       },
-      error: err => {
-        this.tratarErro(err);
-        this.carregando = false;
+      error: () => {
+        this.mensagemAviso = [
+          'Não foi possível carregar as etiquetas.'
+        ];
       }
     });
   }
 
-  buscarCep() {
+  irParaStep(step: number): void {
+    this.step = step;
+  }
+
+  onSubmit(): void {
     this.mensagemErro = [];
-    this.mensagemAviso=[];
-    const cep = this.form.get('cep')?.value?.replace(/\D/g, '');
+    this.mensagemAviso = [];
+    this.mensagemSucesso = [];
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+
+      this.mensagemErro = [
+        'Preencha corretamente os campos obrigatórios.'
+      ];
+
+      return;
+    }
+
+    if (!this.idPessoa) {
+      this.mensagemErro = [
+        'Não foi possível identificar a pessoa física.'
+      ];
+
+      return;
+    }
+
+    this.carregando = true;
+
+    const formValue = this.form.getRawValue();
+
+    const endereco = limparNull<EnderecoRequest>(
+      formValue.endereco ?? {}
+    );
+
+    const informacoesComplementares =
+      limparNull<InformacoesComplementaresRequest>(
+        formValue.informacoesComplementares ?? {}
+      );
+
+    const request: PessoaFisicaUpdateRequest = {
+      nome: formValue.nome?.trim() || undefined,
+      apelido: formValue.apelido?.trim() || undefined,
+
+      idEtiqueta:
+        formValue.idEtiqueta != null
+          ? Number(formValue.idEtiqueta)
+          : undefined,
+
+      email: formValue.email?.trim() || undefined,
+      site: formValue.site?.trim() || undefined,
+
+      idPerfil:
+        formValue.idPerfil != null
+          ? Number(formValue.idPerfil)
+          : undefined,
+
+      rg: formValue.rg?.trim() || undefined,
+      cpf: formValue.cpf?.trim() || undefined,
+
+      tituloEleitor:
+        formValue.tituloEleitor?.trim() || undefined,
+
+      carteiraTrabalho:
+        formValue.carteiraTrabalho?.trim() || undefined,
+
+      pisPasep:
+        formValue.pisPasep?.trim() || undefined,
+
+      cnh:
+        formValue.cnh?.trim() || undefined,
+
+      passaporte:
+        formValue.passaporte?.trim() || undefined,
+
+      certidaoReservista:
+        formValue.certidaoReservista?.trim() || undefined,
+
+      telefone:
+        formValue.telefone?.trim() || undefined,
+
+      idUsuario:
+        this.usuarioLogado?.idUsuario ?? undefined,
+
+      idSexo: undefined,
+
+      observacoes:
+        formValue.observacoes?.trim() || undefined,
+
+      endereco,
+      informacoesComplementares
+    };
+
+this.pessoaService
+  .editarPessoaFisica(
+    this.idPessoa,
+    request
+  )
+  .pipe(
+    finalize(() => {
+      this.carregando = false;
+      this.cdr.detectChanges();
+    })
+  )
+  .subscribe({
+    next: response => {
+      this.mensagemErro = [];
+      this.mensagemAviso = [];
+
+      this.mensagemSucesso = [
+        response.message
+      ];
+
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.router.navigate([
+          '/admin/consultar-pessoas'
+        ]);
+      }, 3000);
+    },
+
+    error: (err: HttpErrorResponse) => {
+      this.tratarErro(err);
+    }
+  });
+}
+
+  buscarCep(): void {
+    this.mensagemErro = [];
+    this.mensagemAviso = [];
+
+    const cep = this.form
+      .get('endereco.cep')
+      ?.value
+      ?.replace(/\D/g, '');
 
     if (!cep || cep.length !== 8) {
-        this.mensagemAviso.push('O CEP deve conter 8 dígitos ou deixar vazio para caso for em audiência');
+      this.mensagemAviso = [
+        'O CEP deve conter 8 dígitos.'
+      ];
+
       return;
     }
 
     this.cepService.buscarCep(cep).subscribe({
-      next: (endereco) => {
+      next: endereco => {
         if ((endereco as any).erro) {
-          this.mensagemErro.push('CEP não encontrado.');
+          this.mensagemErro = [
+            'CEP não encontrado.'
+          ];
+
           return;
         }
 
         this.form.patchValue({
-          logradouro: endereco.logradouro,
-          bairro: endereco.bairro,
-          localidade: endereco.localidade,
-          uf: endereco.uf
+          endereco: {
+            logradouro: endereco.logradouro,
+            bairro: endereco.bairro,
+            localidade: endereco.localidade,
+            uf: endereco.uf
+          }
         });
       },
       error: () => {
-        this.mensagemErro.push('Erro ao buscar o CEP. Verifique sua conexão e tente novamente.');
+        this.mensagemErro = [
+          'Erro ao buscar o CEP.'
+        ];
       }
     });
   }
 
-
-  private setRequired(campo: string, required: boolean) {
-    const control = this.form.get(campo);
-    if (!control) return;
-
-    if (required) {
-      control.setValidators(Validators.required);
-    } else {
-      control.clearValidators();
+  limitarUf(valor: string): string {
+    if (!valor) {
+      return '';
     }
 
-    control.updateValueAndValidity();
+    return valor
+      .replace(/[^a-zA-Z]/g, '')
+      .toUpperCase()
+      .substring(0, 2);
   }
 
-  onSubmit() {
-    this.carregando = true;
-    this.mensagemErro = [];
-    this.mensagemSucesso = [];
+  onBlurUf(): void {
+    const controle = this.form.get('endereco.uf');
+    const valor = controle?.value || '';
 
-    const request: EditarPessoaFisicaRequest = {
-      idPessoa: this.form.value.idPessoa!,
-      nome: this.form.value.nome!,
-      profissao: this.form.value.profissao!,
-      rg: this.form.value.rg!,
-      expeditor: this.form.value.expeditor!,
-      cpf: this.form.value.cpf!,
-      email: this.form.value.email!,
-      idSexo: this.form.value.idSexo!,
-      telefone: this.form.value.telefone!.trim() || 'Em audiência',
-      observacoes: this.form.value.observacoes!,
-      idUsuario: this.form.value.idUsuario!,
-      endereco: {
-        logradouro: this.form.value.logradouro!,
-        numero: this.form.value.numero!,
-        complemento: this.form.value.complemento!,
-        bairro: this.form.value.bairro!,
-        localidade: this.form.value.localidade!,
-        uf: this.form.value.uf!,
-        cep: this.form.value.cep!.trim() || 'Em audiência'
-      }
-    };
-
-    this.pessoaService.editarPessoaFisica(request).subscribe({
-      next: (response) => {
-        this.form.reset();
-        this.mensagemErro = [];
-
-        this.mensagemSucesso = [response?.mensagem ?? 'Pessoa atualizada com sucesso.'];
-
-        this.carregando = false; // <-- Mostra a mensagem imediatamente
-
-        // Agora espera 3 segundos COM A MENSAGEM VISÍVEL e só depois redireciona
-        setTimeout(() => {
-          this.router.navigate(['/admin/consultar-pessoas']);
-        }, 3000);
-      },
-      error: (e) => {
-        this.mensagemErro = [];
-        const errorResponse = e.error;
-
-        if (errorResponse?.errors) {
-          for (const key in errorResponse.errors) {
-            if (Array.isArray(errorResponse.errors[key])) {
-              this.mensagemErro.push(...errorResponse.errors[key]);
-            }
-          }
-        } else if (errorResponse?.mensagem) {
-          this.mensagemErro.push(errorResponse.mensagem);
-          if (errorResponse.Detalhes) this.mensagemErro.push(errorResponse.Detalhes);
-        } else if (errorResponse?.Message) {
-          this.mensagemErro.push(errorResponse.Message);
-          if (errorResponse.inner) this.mensagemErro.push(errorResponse.inner);
-        } else {
-          this.mensagemErro.push('Ocorreu um erro inesperado ao processar sua solicitação.');
-        }
-
-        this.carregando = false;
-      }
-    });
+    controle?.setValue(
+      this.limitarUf(valor)
+    );
   }
 
-  //historico
-
-  carregandoHistorico = false;
-
-  abrirModalHistorico(): void {
-    if (!this.idPessoa) return;
-
-    this.carregandoHistorico = true;
-    console.log('Carregando histórico de pessoas:', this.idPessoa);
-
-    this.pessoaService.consultarHistoricoPessoaFisica(this.idPessoa).subscribe({
-      next: (response) => {
-        console.log('Histórico Pessoa recebido:', response);
-
-        // Ajuste conforme o retorno real, pode ser direto array ou dentro de alguma propriedade
-        const listaHistoricos = (response as any).historicos || response || [];
-
-        this.historicoPessoa = listaHistoricos.map((item: any) => {
-          const dadosAntes = item.dadosAntes ? JSON.parse(item.dadosAntes) : {};
-          const dadosDepois = item.dadosDepois ? JSON.parse(item.dadosDepois) : {};
-
-          return {
-            idHistoricoPessoa: item.idHistoricoPessoa,
-            idPessoa: item.idPessoa,
-            idUsuario: item.idUsuario,
-            dataAlteracao: item.dataAlteracao,
-            tipoAlteracao: item.tipoAlteracao,
-            observacoes: item.observacoes,
-            dadosAntes: item.dadosAntes,
-            dadosDepois: item.dadosDepois,
-            dadosAntesObj: dadosAntes,
-            dadosDepoisObj: dadosDepois,
-            nomePessoa: dadosDepois.Nome || dadosAntes.Nome || 'Não informado',
-            cpfPessoa: dadosDepois.Cpf || dadosAntes.Cpf || 'Não informado',
-            rgPessoa: dadosDepois.Rg || dadosAntes.Rg || 'Não informado',
-            emailPessoa: dadosDepois.Email || dadosAntes.Email || 'Não informado',
-            nomeUsuario: item.usuario?.nomeUsuario || '',
-            usuarioNome: item.usuario?.login || ''
-          };
-        });
-
-        this.carregandoHistorico = false;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar histórico da pessoa:', err);
-        this.mensagemErro.push('Erro ao carregar histórico da pessoa.');
-        this.carregandoHistorico = false;
-      }
-    });
-  }
   formatarTelefonesEmLinha(valor?: string): string {
-    if (!valor) return '';
+    if (!valor) {
+      return '';
+    }
+
     return valor
       .split(';')
-      .map(tel => {
-        const cleaned = tel.replace(/\D/g, '');
-        if (cleaned.length === 11) {
-          return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        } else if (cleaned.length === 10) {
-          return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        } else {
-          return tel.trim(); // não formata se não tiver 10 ou 11 dígitos
+      .map(telefone => {
+        const numeros = telefone.replace(/\D/g, '');
+
+        if (numeros.length === 11) {
+          return numeros.replace(
+            /(\d{2})(\d{5})(\d{4})/,
+            '($1) $2-$3'
+          );
         }
+
+        if (numeros.length === 10) {
+          return numeros.replace(
+            /(\d{2})(\d{4})(\d{4})/,
+            '($1) $2-$3'
+          );
+        }
+
+        return telefone.trim();
       })
       .join('; ');
   }
 
-  formatarCampoTelefone() {
-    const telCtrl = this.form.get('telefone');
-    const valor = telCtrl?.value;
-
-    if (!valor) return;
-
-    const telefones = valor.split(';').map(t => t.trim()).filter(t => t);
-    //aumenta o quantidade
-    if (telefones.length > 3) {
-      this.mensagemErro = ['Você só pode informar no máximo três telefones.'];
-      // Remove o que foi digitado a mais (opcional)
-      telCtrl?.setValue(telefones.slice(0, 2).join('; '));
-    } else {
-      telCtrl?.setValue(this.formatarTelefonesEmLinha(valor));
-    }
-  } formatarLimitarTelefones() {
+  formatarLimitarTelefones(): void {
     const controle = this.form.get('telefone');
-    if (!controle) return;
 
-    const valor = controle.value;
-    if (!valor) return;
+    if (!controle?.value) {
+      return;
+    }
 
-    const formatado = this.limitarTelefonesMaximo22Numeros(valor);
+    const formatado =
+      this.limitarTelefonesMaximo33Numeros(
+        controle.value
+      );
+
     controle.setValue(formatado);
   }
 
-  validarQuantidadeTelefones(valor: string): boolean {
-    const telefones = valor.split(';').map(t => t.trim()).filter(t => t);
-    //retorno ate 3 numeros
-    return telefones.length <= 3;
-  }
-  limitarSeparadores(event: KeyboardEvent) {
-    const input = this.form.get('telefone')?.value || '';
-    const quantidadePontoVirgula = (input.match(/;/g) || []).length;
+  limitarTelefonesMaximo33Numeros(
+    valor: string
+  ): string {
+    const apenasNumeros = valor
+      .replace(/\D/g, '')
+      .substring(0, 33);
 
-    //aumenta a quantidade de ponto e virgula
-    if (event.key === ';' && quantidadePontoVirgula >= 2) {
-      event.preventDefault(); // bloqueia a digitação
-    }
-  } limitarTelefonesMaximo22Numeros(valor: string): string {
-    // Extrai apenas os números (ignorando espaços, parênteses, hífens, etc.)
-    //aumenta o numero de digitos
-    const apenasNumeros = valor.replace(/\D/g, '').substring(0, 33);
+    const telefones: string[] = [];
 
-    let resultado = '';
-    let contador = 0;
+    for (
+      let inicio = 0;
+      inicio < apenasNumeros.length;
+      inicio += 11
+    ) {
+      const telefone =
+        apenasNumeros.substring(inicio, inicio + 11);
 
-    while (contador < apenasNumeros.length) {
-      const restante = apenasNumeros.length - contador;
-
-      if (restante >= 11) {
-        // Formata como celular com 9 dígitos
-        resultado += `(${apenasNumeros.substr(contador, 2)}) ${apenasNumeros.substr(contador + 2, 5)}-${apenasNumeros.substr(contador + 7, 4)}; `;
-        contador += 11;
-      } else if (restante >= 10) {
-        // Formata como fixo com 8 dígitos
-        resultado += `(${apenasNumeros.substr(contador, 2)}) ${apenasNumeros.substr(contador + 2, 4)}-${apenasNumeros.substr(contador + 6, 4)}; `;
-        contador += 10;
-      } else {
-        break; // se restarem menos de 10, não tenta formatar
+      if (telefone.length === 11) {
+        telefones.push(
+          telefone.replace(
+            /(\d{2})(\d{5})(\d{4})/,
+            '($1) $2-$3'
+          )
+        );
+      } else if (telefone.length === 10) {
+        telefones.push(
+          telefone.replace(
+            /(\d{2})(\d{4})(\d{4})/,
+            '($1) $2-$3'
+          )
+        );
       }
     }
 
-    return resultado.trim().replace(/;$/, ''); // remove o último ";" se necessário
+    return telefones.join('; ');
   }
 
-  private tratarErro(e: any) {
+  formatarCampoEmail(): void {
+    const controle = this.form.get('email');
+    const valor = controle?.value;
+
+    if (!valor) {
+      return;
+    }
+
+    let emails = valor
+      .split(';')
+      .map(email => email.trim())
+      .filter(email => email);
+
+    if (emails.length > 3) {
+      this.mensagemErro = [
+        'Você só pode informar no máximo três e-mails.'
+      ];
+
+      emails = emails.slice(0, 3);
+    }
+
+    controle.setValue(
+      emails.join('; ')
+    );
+  }
+
+  get podeEnviar(): boolean {
+    return this.form.valid && !this.carregando;
+  }
+
+  private tratarErro(
+    err: HttpErrorResponse
+  ): void {
     this.mensagemErro = [];
-    const errorResponse = e.error;
+
+    const errorResponse = err.error;
 
     if (errorResponse?.errors) {
       for (const key in errorResponse.errors) {
-        if (Array.isArray(errorResponse.errors[key])) {
-          this.mensagemErro.push(...errorResponse.errors[key]);
+        const erros = errorResponse.errors[key];
+
+        if (Array.isArray(erros)) {
+          this.mensagemErro.push(...erros);
         }
       }
+    } else if (errorResponse?.message) {
+      this.mensagemErro.push(
+        errorResponse.message
+      );
     } else if (errorResponse?.mensagem) {
-      this.mensagemErro.push(errorResponse.mensagem);
-      if (errorResponse.Detalhes) {
-        this.mensagemErro.push(errorResponse.Detalhes);
-      }
-    } else if (errorResponse?.Message) {
-      this.mensagemErro.push(errorResponse.Message);
-      if (errorResponse.inner) {
-        this.mensagemErro.push(errorResponse.inner);
-      }
+      this.mensagemErro.push(
+        errorResponse.mensagem
+      );
     } else {
-      this.mensagemErro.push('Ocorreu um erro inesperado ao processar sua solicitação.');
+      this.mensagemErro.push(
+        'Erro inesperado ao atualizar a pessoa física.'
+      );
     }
 
     this.carregando = false;
   }
 }
-*/
+

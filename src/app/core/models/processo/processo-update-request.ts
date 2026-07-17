@@ -1,43 +1,33 @@
-import { GrupoClienteRequest } from "../grupo-clientes/grupo-cliente-request ";
-import { GrupoEnvolvidosRequest } from "../grupo-envolvidos/grupo-envolvidos-request";
-import { GrupoEtiquetaRequest } from "../grupo-etiquetas/grupo-etiquetas";
+import { ProcessoDocumentoRequest } from './processo-documento-request';
 
 export interface ProcessoUpdateRequest {
-
-  acaoId?: string | null;
-  varaId?: string | null;
-
-  usuarioResponsavelId?: string | null;
-
-  juizo?: string;
-
-  pasta?: string;
+  usuarioResponsavelId?: string;
+  estagiarioResponsavelId?: string;
 
   titulo?: string;
-
   numeroProcesso?: string;
-
-  linkTribunal?: string;
-
   objeto?: string;
-
-  valorCausa?: number | null;
-
-  distribuido?: Date | string | null;
-
-  valorCondenacao?: number | null;
+  distribuido?: string;
 
   observacao?: string;
 
-  instancia?: number | null;
-
-  acesso?: number | null;
-
-  tipoProcesso?: number | null;
+  acesso?: number;
+  tipoProcesso?: number;
 
   novaLocalizacao?: string;
- localizacaoInicialId?: string;
-  grupoClienteProcesso?: GrupoClienteRequest[];
-  grupoEnvolvidosProcesso?: GrupoEnvolvidosRequest[];
-  grupoEtiquetasProcesso?: GrupoEtiquetaRequest[];
+  localizacaoInicialId?: string;
+
+  documentos?: ProcessoDocumentoRequest[];
+
+  grupoClienteProcesso?: {
+    idPessoa: string;
+  }[];
+
+  grupoEnvolvidosProcesso?: {
+    idPessoa: string;
+  }[];
+
+  grupoEtiquetasProcesso?: {
+    etiquetaId: string;
+  }[];
 }

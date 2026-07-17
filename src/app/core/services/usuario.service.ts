@@ -15,6 +15,7 @@ import { EditarUsuarioRequest } from "../models/usuario/editar-usuario-request";
 import { EditarUsuarioResponse } from "../models/usuario/editar-usuario-response";
 import { ApiResponse } from "../models/respostas/api-response";
 import { PerfilUsuarioResponse } from "../models/perfil/perfil-usuario-response";
+import { UsuarioEstagiarioResponse } from "../models/usuario/usuario-estagiario-response";
 
 @Injectable({
     providedIn: 'root'
@@ -35,10 +36,12 @@ export class UsuarioService {
             );
     }
     //métodos para cadastrar reclamacao
-    cadastrar(request: CriarUsuarioRequest): Observable<CriarUsuarioResponse> {
-        return this.http.post<CriarUsuarioResponse>
-            (`${this.url}/api/v1/usuarios/cadastrar-usuario`, request)
-    }
+  cadastrar(request: CriarUsuarioRequest): Observable<ApiResponse<CriarUsuarioResponse>> {
+    return this.http.post<ApiResponse<CriarUsuarioResponse>>(
+        `${this.url}/api/v1/usuarios/cadastrar-usuario`,
+        request
+    );
+}
     consultarUsuarioResponsavel(): Observable<ConsultarUsuarioResponse[]> {
         return this.http.get<ConsultarUsuarioResponse[]>
             (`${this.url}/api/v1/usuarios/consultar-usuario-responsavel`);
@@ -108,7 +111,11 @@ editarPorId(
 
         return this.http.post(`${this.url}/api/v1/foto/cadastrar-ou-atualizar`, formData);
     }
-
+consultarEstagiarios(): Observable<UsuarioEstagiarioResponse[]> {
+  return this.http.get<UsuarioEstagiarioResponse[]>(
+    `${this.url}/api/v1/usuarios/consultar-estagiarios`
+  );
+}
    
 
 }

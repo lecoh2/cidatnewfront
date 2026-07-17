@@ -1,76 +1,114 @@
 <div class="auth-full-page d-flex">
   <div class="auth-form p-3">
+
     <div class="text-center">
-     
-    <!-- Logo -->
-    <div class="logo-container">
-      <app-logo-animada tamanho="pequena"></app-logo-animada>
-    </div>
 
-    <!-- Texto com máquina de escrever -->
-    <div class="texto-container">
-      <app-texto-deslandes-animado frase=" Sistema de Controle de Processos"></app-texto-deslandes-animado>
-    </div>
+      <!-- Logo -->
+      <div class="logo-container">
+        <app-logo-animada tamanho="pequena"></app-logo-animada>
+      </div>
 
-
-
-      <h1 class="h2">
-
-      </h1>
+      <!-- Texto animado -->
+      <div class="texto-container">
+        <app-texto-deslandes-animado
+          frase="Cidat - Sistema de Controle de Processos">
+        </app-texto-deslandes-animado>
+      </div>
 
     </div>
 
     <div class="mb-3">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="user">
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        class="user">
+
+        <!-- LOGIN -->
         <div class="mb-3">
-          <label class="form-label">Email ou login</label>
-          <input class="form-control form-control-lg" type="text" placeholder="entre com seu E-mail ou Login"
+          <label class="form-label">Email ou Login</label>
+
+          <input
+            class="form-control form-control-lg"
+            type="text"
+            placeholder="Entre com seu E-mail ou Login"
             formControlName="login">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Senha</label>
-            <input class="form-control form-control-lg" type="password" placeholder="Entre com sua Senha"
-              formControlName="senha">
-
-            </div>
-            <div>
-              <div class="form-check align-items-center">
-                <input id="customControlInline" type="checkbox" class="form-check-input" value="remember-me"
-                  name="remember-me" checked>
-                  <label class="form-check-label text-small" for="customControlInline">Lembrar senha</label>
-                </div>
-              </div>
-              <div class="d-grid gap-2 mt-3">
-                <input type="submit" class="btn btn-lg btn-primary" value="Acessar Sistema"
-                  [disabled]="carregando" />
-                </div>
-
-              </form>
-              <div class="mt-3">
-                <!-- Spinner alinhado à esquerda -->
-                @if (carregando) {
-                  <app-spinner [show]="true" message="Autenticando usuário..."
-                    class="d-inline-block me-3">
-                  </app-spinner>
-                }
-
-                <!-- Alertas ocupando 100% da largura -->
-                @if (!carregando && mensagemSucesso.length > 0) {
-                  <app-alerts class="w-100" titulo="Autenticação"
-                    [mensagens]="mensagemSucesso" tipo="success" icone="fas fa-fw fa-laugh-beam fa-2x">
-                  </app-alerts>
-                }
-
-                @if (!carregando && mensagemErro.length > 0) {
-                  <app-alerts class="w-100" titulo="Erro!"
-                    [mensagens]="mensagemErro" tipo="danger" icone="fas fa-times-circle fa-lg">
-                  </app-alerts>
-                }
-              </div>
-
-            </div>
-            <p class="text-center mt-3"> copyright © Deslandes {{ anoAtual }} Todos Direitos Reservados.</p>
-          </div>
-
-
         </div>
+
+        <div
+          class="text-danger mt-1"
+          *ngIf="form.get('login')?.touched && form.get('login')?.invalid">
+
+          Login é obrigatório.
+        </div>
+
+        <!-- SENHA -->
+        <div class="mb-3 mt-3">
+          <label class="form-label">Senha</label>
+
+          <input
+            class="form-control form-control-lg"
+            type="password"
+            placeholder="Entre com sua senha"
+            formControlName="senha">
+        </div>
+
+        <div
+          class="text-danger mt-1"
+          *ngIf="form.get('senha')?.touched && form.get('senha')?.invalid">
+
+          Senha é obrigatória.
+        </div>
+
+        <!-- BOTÃO -->
+        <div class="d-grid gap-2 mt-4">
+          <input
+            type="submit"
+            class="btn btn-lg btn-primary"
+            value="Acessar Sistema"
+            [disabled]="carregando">
+        </div>
+
+      </form>
+
+      <!-- SPINNER -->
+      <div class="mt-3" *ngIf="carregando">
+        <app-spinner
+          [show]="true"
+          message="Autenticando usuário...">
+        </app-spinner>
+      </div>
+
+      <!-- SUCESSO -->
+      <div class="mt-3" *ngIf="mensagemSucesso.length > 0">
+
+        <app-alerts
+          titulo="Autenticação"
+          [mensagens]="mensagemSucesso"
+          tipo="success"
+          icone="fas fa-fw fa-laugh-beam fa-2x">
+        </app-alerts>
+
+      </div>
+
+      <!-- ERRO -->
+      <div class="mt-3" *ngIf="mensagemErro.length > 0">
+
+        <app-alerts
+          titulo="Erro!"
+          [mensagens]="mensagemErro"
+          tipo="danger"
+          icone="fas fa-times-circle fa-lg">
+        </app-alerts>
+
+      </div>
+
+    </div>
+
+    <p class="text-center mt-3">
+      Copyright © ALBI TECNOLOGIA {{ anoAtual }}
+      Todos os Direitos Reservados.
+    </p>
+
+  </div>
+</div>
